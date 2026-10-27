@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
 export type AppRole = 'Administrator' | 'Supervisor' | 'TechnicalLeader' | 'Operator';
 export type AccessFeature = 'Vehicles' | 'VehicleMovements' | 'ParkingLayout' | 'Reservations' | 'ApplicationSettings' | 'RolePermissions' | 'AuditLogs';
@@ -22,10 +23,19 @@ export const useAppAccess = (userPrincipalName: string | undefined, userObjectId
     queryKey: ['app-access', userPrincipalName, userObjectId],
     enabled: Boolean(userPrincipalName || userObjectId),
     queryFn: async () => {
-      const role: AppRole = 'Administrator';
-      const id = userObjectId ?? userPrincipalName ?? 'local-operator';
+      if (!supabase || !userObjectId) throw new Error('Authenticated workspace membership is required.');
+      const { data, error } = await supabase
+        .from('workspace_members')
+        .select('role')
+        .eq('user_id', userObjectId)
+        .single();
+      if (error) throw error;
+      if (!['Administrator', 'Supervisor', 'TechnicalLeader', 'Operator'].includes(data.role)) {
+        throw new Error('Workspace membership has an invalid role.');
+      }
+      const role = data.role as AppRole;
       return {
-        appUser: { id, applicationUserName: userPrincipalName?.split('@')[0] ?? 'Local Operator', email: userPrincipalName ?? '' },
+        appUser: { id: userObjectId, applicationUserName: userPrincipalName?.split('@')[0] ?? 'Operator', email: userPrincipalName ?? '' },
         role,
         can: (feature: AccessFeature, action: AccessAction) => roleCan(role, feature, action),
       };

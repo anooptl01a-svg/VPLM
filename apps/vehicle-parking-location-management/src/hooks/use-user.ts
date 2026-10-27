@@ -1,22 +1,35 @@
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+
+type AuthenticatedUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  userPrincipalName: string;
+  objectId: string;
+  tenantId: string;
+};
 
 export const useUser = () => {
-  const savedName = typeof window === 'undefined' ? '' : window.localStorage.getItem('vplm-local-user') ?? '';
-  const fullName = savedName.trim() || 'Local Operator';
-  const userPrincipalName = `${fullName.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '') || 'operator'}@local`;
-  return useQuery({
-    queryKey: ['user', fullName],
-    queryFn: async () => ({
-      fullName,
-      userPrincipalName,
-      objectId: `local-${userPrincipalName}`,
-      tenantId: 'local',
-    }),
-    initialData: {
-      fullName,
-      userPrincipalName,
-      objectId: `local-${userPrincipalName}`,
-      tenantId: 'local',
+  return useQuery<AuthenticatedUser | null>({
+    queryKey: ['authenticated-user'],
+    queryFn: async () => {
+      if (!supabase) return null;
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      const user = data.user;
+      if (!user) return null;
+      const email = user.email ?? '';
+      return {
+        id: user.id,
+        email,
+        fullName: user.user_metadata.full_name ?? email.split('@')[0] ?? 'Operator',
+        userPrincipalName: email,
+        objectId: user.id,
+        tenantId: 'supabase-workspace',
+      };
     },
+    staleTime: 30_000,
+    retry: false,
   });
 };

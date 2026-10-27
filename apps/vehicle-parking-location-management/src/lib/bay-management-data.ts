@@ -52,5 +52,9 @@ export const loadBayManagementState = (): BayManagementState => {
 };
 
 export const saveBayManagementState = (state: BayManagementState): void => {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const serialized = JSON.stringify(state);
+  const changed = window.localStorage.getItem(STORAGE_KEY) !== serialized;
+  window.localStorage.setItem(STORAGE_KEY, serialized);
+  if (changed) notifyWorkspaceDataChanged();
 };
+import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';

@@ -1,4 +1,5 @@
 import type { ParkingLocation, Vehicle } from '@/lib/parking-data';
+import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
 
 export type RoadTestStatus = 'Assigned' | 'In Road Test' | 'Completed' | 'Cancelled';
 export type RoadTestResult = 'Pass' | 'Fail';
@@ -84,9 +85,14 @@ export const loadRoadTests = (): RoadTestRecord[] => load(STORAGE_KEY, fallbackT
 export const loadRoadTestAudit = (): RoadTestAuditEntry[] => load(AUDIT_KEY, fallbackAudit);
 export const loadRoadTestNotifications = (): RoadTestNotification[] => load(NOTIFICATION_KEY, fallbackNotifications);
 export const saveRoadTestData = (tests: RoadTestRecord[], audit: RoadTestAuditEntry[], notifications: RoadTestNotification[]) => {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tests));
-  window.localStorage.setItem(AUDIT_KEY, JSON.stringify(audit));
-  window.localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(notifications));
+  const entries = [[STORAGE_KEY, tests], [AUDIT_KEY, audit], [NOTIFICATION_KEY, notifications]] as const;
+  let changed = false;
+  for (const [key, value] of entries) {
+    const serialized = JSON.stringify(value);
+    changed ||= window.localStorage.getItem(key) !== serialized;
+    window.localStorage.setItem(key, serialized);
+  }
+  if (changed) notifyWorkspaceDataChanged();
 };
 export const getVehicleRoadTest = (vehicleId: string): RoadTestRecord | undefined => loadRoadTests().filter((test: RoadTestRecord) => test.vehicleId === vehicleId).sort((a: RoadTestRecord, b: RoadTestRecord) => new Date(b.assignmentTimestamp).getTime() - new Date(a.assignmentTimestamp).getTime())[0];
 export const roadTestLocationLabel = (id: string | undefined, locations: ParkingLocation[]) => {

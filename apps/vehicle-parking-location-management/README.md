@@ -1,17 +1,10 @@
 # Vehicle Parking Management
 
-## Development
+See the root [README](../../README.md) for Supabase setup, access policies, local development, and publishing instructions.
 
 ```sh
 npm ci
 npm run dev
-```
-
-## Build and checks
-
-```sh
-npm run build
 npm run check
+npm run build
 ```
-
-The app is currently browser-only: records stay in local browser storage and are not shared or authenticated. Do not use for sensitive production records until a secured shared backend is configured.

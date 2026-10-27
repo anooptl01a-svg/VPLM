@@ -24,6 +24,7 @@ import {
   type Movement, type ParkingLocation, type Reservation, type Vehicle,
 } from '@/lib/parking-data';
 import { loadOfflineState, saveOfflineState, type OfflineAuditEvent } from '@/lib/offline-store';
+import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
 import { validateVehicle } from '@/lib/vehicle-validation';
 import { enqueueSync } from '@/lib/sync-queue';
 
@@ -106,10 +107,11 @@ const loadGarageLayout = (): GarageLayoutItem[] => {
 
 type ParkingAppProps = {
   signedInUserId: string;
+  initialCloudRevision: number | null;
   onExit: () => void;
 };
 
-export function ParkingApp({ signedInUserId, onExit }: ParkingAppProps) {
+export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: ParkingAppProps) {
   const { data: user } = useUser();
   const { soundEnabled, toggleSound, playSound } = useNotificationSound(user?.objectId ?? user?.userPrincipalName);
   const notificationClickTimer = useRef<number | undefined>(undefined);
@@ -141,8 +143,9 @@ export function ParkingApp({ signedInUserId, onExit }: ParkingAppProps) {
   const [dashboardVehicleId, setDashboardVehicleId] = useState<string>();
   const [pullDistance, setPullDistance] = useState(0);
   const pullStartY = useRef<number | undefined>(undefined);
-  const { sync, state: syncState, lastSyncAt, pendingCount: pendingChanges, hasPublishedSnapshot } = useLocalDataSync();
+  const { sync, state: syncState, lastSyncAt, pendingCount: pendingChanges, hasPublishedSnapshot } = useLocalDataSync(initialCloudRevision);
   const isOnline = syncState !== 'offline';
+  const syncLabel = syncState === 'syncing' ? 'Syncing…' : syncState === 'offline' ? 'Offline · pending' : syncState === 'error' ? 'Sync needs attention' : pendingChanges ? 'Changes pending' : 'Cloud synced';
 
   const [zone, setZone] = useState('A');
   const [assignmentVehicle, setAssignmentVehicle] = useState<VehicleFormData>(emptyVehicleForm);
@@ -215,8 +218,14 @@ export function ParkingApp({ signedInUserId, onExit }: ParkingAppProps) {
     if (!hasPublishedSnapshot) return;
     if (!hasMounted.current) hasMounted.current = true;
     saveOfflineState({ vehicles, locations, movements, reservations, auditEvents, pendingChanges, savedAt: new Date().toISOString() });
-    window.localStorage.setItem('vplm-garage-layout-v1', JSON.stringify(garageLayout));
   }, [vehicles, locations, movements, reservations, auditEvents, pendingChanges, garageLayout, hasPublishedSnapshot]);
+  useEffect(() => {
+    const key = 'vplm-garage-layout-v1';
+    const serialized = JSON.stringify(garageLayout);
+    if (window.localStorage.getItem(key) === serialized) return;
+    window.localStorage.setItem(key, serialized);
+    notifyWorkspaceDataChanged();
+  }, [garageLayout]);
   const [searchQuery, setSearchQuery] = useState('');
   const [zoneFilter, setZoneFilter] = useState('all');
   const [historyFilter, setHistoryFilter] = useState('');
@@ -442,7 +451,7 @@ export function ParkingApp({ signedInUserId, onExit }: ParkingAppProps) {
             </div>
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden text-right xl:block"><p className="text-sm font-semibold">{format(currentTime, 'EEE, d MMM')}</p><p className="text-xs text-muted-foreground">{format(currentTime, 'HH:mm:ss')}</p></div>
-              <Button variant={isOnline ? 'default' : 'secondary'} size="sm" className="rounded-xl" onClick={() => void sync(true)} aria-label="Data storage status"><span className="live-dot" /><span className="hidden lg:inline">{isOnline ? 'On this device' : 'Offline'}</span></Button>
+              <Button variant={isOnline && syncState !== 'error' ? 'default' : 'secondary'} size="sm" className="rounded-xl" onClick={() => void sync(true)} aria-label={`Data storage status: ${syncLabel}`} title={lastSyncAt ? `Last synced ${new Date(lastSyncAt).toLocaleString()}` : 'Click to sync workspace data'}><span className="live-dot" /><span className="hidden lg:inline">{syncLabel}</span></Button>
               <Button variant="outline" size="icon" className="rounded-xl" onClick={handleNotificationClick} onDoubleClick={(event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault()} aria-label={`Notifications. Sound ${soundEnabled ? 'on' : 'off'}. Double-click to toggle sound.`} title={`Notification sound ${soundEnabled ? 'on' : 'off'} · double-click to toggle`}>{soundEnabled ? <Bell /> : <BellOff />}</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
