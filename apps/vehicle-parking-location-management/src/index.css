@@ -1,0 +1,1105 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-skeleton: var(--skeleton);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 1.5rem;
+  --background: oklch(0.095 0.025 170);
+  --foreground: oklch(0.97 0.018 165);
+  --card: oklch(0.165 0.035 170);
+  --card-foreground: oklch(0.97 0.018 165);
+  --popover: oklch(0.145 0.032 170);
+  --popover-foreground: oklch(0.97 0.018 165);
+  --primary: oklch(0.86 0.22 164);
+  --primary-foreground: oklch(0.13 0.03 170);
+  --secondary: oklch(0.235 0.045 172);
+  --secondary-foreground: oklch(0.97 0.018 165);
+  --muted: oklch(0.205 0.036 170);
+  --muted-foreground: oklch(0.86 0.028 165);
+  --accent: oklch(0.82 0.19 174);
+  --accent-foreground: oklch(0.13 0.03 170);
+  --destructive: oklch(0.67 0.2 22);
+  --border: oklch(0.34 0.065 170);
+  --input: oklch(0.225 0.042 170);
+  --ring: oklch(0.86 0.22 164);
+  --chart-1: oklch(0.86 0.22 164);
+  --chart-2: oklch(0.78 0.18 184);
+  --chart-3: oklch(0.84 0.14 112);
+  --chart-4: oklch(0.7 0.14 220);
+  --chart-5: oklch(0.8 0.19 145);
+  --sidebar: oklch(0.075 0.022 170);
+  --sidebar-foreground: oklch(0.97 0.018 165);
+  --sidebar-primary: oklch(0.86 0.22 164);
+  --sidebar-primary-foreground: oklch(0.13 0.03 170);
+  --sidebar-accent: oklch(0.205 0.05 170);
+  --sidebar-accent-foreground: oklch(0.97 0.018 165);
+  --sidebar-border: oklch(0.3 0.06 170);
+  --sidebar-ring: oklch(0.86 0.22 164);
+}
+
+:root .neumorphism-mode,
+body.neumorphism-mode {
+  --radius: 1.35rem;
+  --background: #F0F0F0;
+  --foreground: oklch(0.18 0.01 25);
+  --card: #F0F0F0;
+  --card-foreground: oklch(0.18 0.01 25);
+  --popover: #F0F0F0;
+  --popover-foreground: oklch(0.18 0.01 25);
+  --primary: #FF5257;
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: #E4E4E4;
+  --secondary-foreground: oklch(0.18 0.01 25);
+  --muted: #E7E7E7;
+  --muted-foreground: oklch(0.36 0.01 25);
+  --accent: #FFFFFF;
+  --accent-foreground: oklch(0.18 0.01 25);
+  --destructive: oklch(0.52 0.2 25);
+  --border: #D1D1D1;
+  --input: #F0F0F0;
+  --ring: #FF5257;
+  --chart-1: #FF5257;
+  --chart-2: oklch(0.54 0.03 25);
+  --chart-3: oklch(0.68 0.02 25);
+  --chart-4: oklch(0.42 0.02 25);
+  --chart-5: oklch(0.78 0.01 25);
+  --sidebar: #F0F0F0;
+  --sidebar-foreground: oklch(0.18 0.01 25);
+  --sidebar-primary: #FF5257;
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: oklch(0.18 0.01 25);
+  --sidebar-border: #D1D1D1;
+  --sidebar-ring: #FF5257;
+  background: #F0F0F0;
+}
+
+:root .neumorphism-mode.enterprise-backdrop::before,
+:root .neumorphism-mode.enterprise-backdrop::after,
+:root .neumorphism-mode.industrial-grid::before,
+:root .neumorphism-mode.industrial-grid::after,
+body.neumorphism-mode .enterprise-backdrop::before,
+body.neumorphism-mode .enterprise-backdrop::after,
+body.neumorphism-mode .industrial-grid::before,
+body.neumorphism-mode .industrial-grid::after {
+  display: none;
+}
+
+:root .neumorphism-mode.industrial-grid { background-image: none; }
+
+:root .neumorphism-mode .glass-shell,
+:root .neumorphism-mode .fluent-header,
+:root .neumorphism-mode .bento-card,
+:root .neumorphism-mode .fluent-kpi,
+:root .neumorphism-mode [data-slot='card'],
+:root .neumorphism-mode .road-test-pocket,
+:root .neumorphism-mode .zone-navigation-card {
+  border-color: transparent;
+  background: #F0F0F0;
+  color: var(--card-foreground);
+  box-shadow: 9px 9px 18px #D1D1D1, -9px -9px 18px #FFFFFF;
+  backdrop-filter: none;
+}
+
+:root .neumorphism-mode [data-slot='button'],
+:root .neumorphism-mode [data-slot='input'],
+:root .neumorphism-mode [data-slot='textarea'],
+:root .neumorphism-mode [data-slot='select-trigger'],
+:root .neumorphism-mode [data-slot='tabs-list'],
+:root .neumorphism-mode [role='button'] {
+  border-color: transparent;
+  box-shadow: 5px 5px 10px #D1D1D1, -5px -5px 10px #FFFFFF;
+}
+
+:root .neumorphism-mode [data-slot='button']:active,
+:root .neumorphism-mode [data-slot='select-trigger']:active,
+:root .neumorphism-mode [role='button']:active,
+:root .neumorphism-mode .soft-ui-push[aria-pressed='true'] {
+  box-shadow: inset 4px 4px 8px #D1D1D1, inset -4px -4px 8px #FFFFFF;
+}
+
+:root .neumorphism-mode [data-slot='input'],
+:root .neumorphism-mode [data-slot='textarea'] {
+  background: #F0F0F0;
+  box-shadow: inset 4px 4px 8px #D1D1D1, inset -4px -4px 8px #FFFFFF;
+}
+
+:root .neumorphism-mode [data-slot='dialog-content'],
+:root .neumorphism-mode [data-slot='sheet-content'],
+:root .neumorphism-mode [data-slot='popover-content'],
+:root .neumorphism-mode [data-slot='select-content'],
+:root .neumorphism-mode [data-slot='dropdown-menu-content'],
+:root .neumorphism-mode [data-slot='command'],
+:root .neumorphism-mode [role='menu'],
+:root .neumorphism-mode [role='listbox'] {
+  border-color: transparent;
+  background: #F0F0F0;
+  color: var(--popover-foreground);
+  box-shadow: 12px 12px 24px #D1D1D1, -12px -12px 24px #FFFFFF;
+  backdrop-filter: none;
+}
+
+:root .neumorphism-mode [data-slot='tabs-trigger'][data-state='active'],
+:root .neumorphism-mode [data-slot='select-item'][data-highlighted],
+:root .neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] {
+  background: #FF5257;
+  color: var(--primary-foreground);
+  box-shadow: inset 3px 3px 6px color-mix(in srgb, #FF5257 72%, #D1D1D1), inset -3px -3px 6px color-mix(in srgb, #FF5257 74%, #FFFFFF);
+}
+
+:root .neumorphism-mode table,
+:root .neumorphism-mode [data-slot='table-container'] {
+  border-radius: var(--radius);
+  background: #F0F0F0;
+  box-shadow: inset 5px 5px 10px #D1D1D1, inset -5px -5px 10px #FFFFFF;
+}
+
+:root .neumorphism-mode .parking-garage,
+:root .neumorphism-mode .garage-map-shell,
+:root .neumorphism-mode .map-stage {
+  background: #F0F0F0;
+
+:root .neumorphism-mode [data-slot='dialog-overlay'],
+:root .neumorphism-mode [data-slot='sheet-overlay'],
+body.neumorphism-mode [data-slot='dialog-overlay'],
+body.neumorphism-mode [data-slot='sheet-overlay'] {
+  background: color-mix(in srgb, #F0F0F0 78%, transparent);
+}
+
+body.neumorphism-mode [data-slot='dialog-content'],
+body.neumorphism-mode [data-slot='sheet-content'],
+body.neumorphism-mode [data-slot='popover-content'],
+body.neumorphism-mode [data-slot='select-content'],
+body.neumorphism-mode [data-slot='dropdown-menu-content'],
+body.neumorphism-mode [data-slot='command'],
+body.neumorphism-mode [role='menu'],
+body.neumorphism-mode [role='listbox'] {
+  border-color: transparent;
+  background: #F0F0F0;
+  color: oklch(0.18 0.01 25);
+  box-shadow: 12px 12px 24px #D1D1D1, -12px -12px 24px #FFFFFF;
+}
+
+body.neumorphism-mode [data-slot='button'],
+body.neumorphism-mode [data-slot='input'],
+body.neumorphism-mode [data-slot='textarea'],
+body.neumorphism-mode [data-slot='select-trigger'],
+body.neumorphism-mode [data-slot='tabs-list'],
+body.neumorphism-mode [role='button'] {
+  border-color: transparent;
+  box-shadow: 5px 5px 10px #D1D1D1, -5px -5px 10px #FFFFFF;
+}
+  border-color: transparent;
+  box-shadow: inset 7px 7px 14px #D1D1D1, inset -7px -7px 14px #FFFFFF;
+}
+
+:root .neumorphism-mode svg:not(.vehicle-warning-icon),
+body.neumorphism-mode svg:not(.vehicle-warning-icon) {
+  color: var(--primary);
+  filter: none;
+}
+:root .neumorphism-mode .bg-primary svg:not(.vehicle-warning-icon),
+:root .neumorphism-mode [data-slot='button'].bg-primary svg:not(.vehicle-warning-icon),
+:root .neumorphism-mode [data-slot='tabs-trigger'][data-state='active'] svg:not(.vehicle-warning-icon),
+:root .neumorphism-mode [data-slot='select-item'][data-highlighted] svg:not(.vehicle-warning-icon),
+:root .neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not(.vehicle-warning-icon),
+body.neumorphism-mode .bg-primary svg:not(.vehicle-warning-icon),
+body.neumorphism-mode [data-slot='button'].bg-primary svg:not(.vehicle-warning-icon),
+body.neumorphism-mode [data-slot='tabs-trigger'][data-state='active'] svg:not(.vehicle-warning-icon),
+body.neumorphism-mode [data-slot='select-item'][data-highlighted] svg:not(.vehicle-warning-icon),
+body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not(.vehicle-warning-icon) {
+  color: var(--primary-foreground);
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100vh;
+    background: var(--background);
+  }
+}
+
+@layer components {
+  .industrial-grid {
+    position: relative;
+    isolation: isolate;
+    background-image: linear-gradient(color-mix(in oklch, var(--border) 52%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklch, var(--border) 52%, transparent) 1px, transparent 1px);
+    background-size: 38px 38px;
+  }
+
+  .industrial-grid::before,
+  .industrial-grid::after {
+    content: '';
+    position: fixed;
+    z-index: -1;
+    width: 28rem;
+    height: 28rem;
+    border-radius: 9999px;
+    filter: blur(72px);
+    pointer-events: none;
+  }
+
+  .industrial-grid::before {
+    left: 8%;
+    top: 5%;
+    background: color-mix(in oklch, var(--primary) 18%, transparent);
+  }
+
+  .enterprise-backdrop {
+@keyframes workflow-flow {
+  from { transform: rotate(-4deg) skewX(-10deg) translate3d(-1.5%, 0, 0); }
+  to { transform: rotate(-2deg) skewX(-7deg) translate3d(1.5%, -8px, 0); }
+}
+
+@keyframes bay-scan {
+  0%, 24% { transform: translateX(-130%); }
+  70%, 100% { transform: translateX(130%); }
+}
+
+@keyframes road-flow {
+  from { background-position: 0 50%; }
+  to { background-position: 96px 50%; }
+}
+
+    position: relative;
+    isolation: isolate;
+  }
+
+  .enterprise-backdrop::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent 0 76%, var(--sidebar) 76% 100%);
+  }
+
+  .enterprise-backdrop::after {
+    content: '';
+    position: fixed;
+    z-index: -1;
+    left: -10vw;
+    right: -10vw;
+    bottom: 12vh;
+    height: 24vh;
+    pointer-events: none;
+    border-radius: 50% 50% 45% 55%;
+    border-top: 4.5rem solid color-mix(in oklch, var(--accent) 72%, transparent);
+    transform: rotate(-4deg) skewX(-10deg);
+    filter: blur(1px);
+    animation: workflow-flow 10s ease-in-out infinite alternate;
+  }
+
+  .parking-garage {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    background:
+      radial-gradient(circle at 50% 0%, color-mix(in oklch, var(--primary) 8%, transparent), transparent 45%),
+      repeating-linear-gradient(0deg, color-mix(in oklch, var(--foreground) 3%, transparent) 0 1px, transparent 1px 7px),
+      var(--muted);
+    box-shadow: inset 0 1px 0 color-mix(in oklch, white 65%, transparent), inset 0 -20px 50px color-mix(in oklch, var(--foreground) 7%, transparent);
+  }
+
+  .parking-row {
+    display: grid;
+    grid-template-columns: repeat(23, minmax(3.75rem, 1fr));
+    gap: 0;
+    padding-inline: 0.5rem;
+  }
+
+  .parking-row-facing .parking-space {
+    border-top: 3px solid var(--card);
+    border-bottom: 0;
+  }
+
+  .parking-space {
+    position: relative;
+    min-height: 6.5rem;
+    border: 0;
+    border-inline: 2px solid var(--card);
+    border-bottom: 3px solid var(--card);
+    background: transparent;
+    color: var(--foreground);
+    transition: background-color 180ms ease, filter 180ms ease;
+  }
+
+  .parking-space::after {
+    content: '';
+    position: absolute;
+    inset: auto 10% 0;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--primary);
+    opacity: 0;
+  }
+
+  .parking-space:hover,
+  .parking-space-selected {
+    background: color-mix(in oklch, var(--card) 58%, transparent);
+  }
+
+  .parking-space-selected::after {
+    opacity: 1;
+  }
+
+  .bay-available { background: var(--card); color: var(--card-foreground); }
+  .bay-occupied { background: transparent; color: var(--foreground); }
+  .bay-reserved { background: var(--secondary); color: var(--secondary-foreground); }
+  .bay-maintenance { background: var(--accent); color: var(--accent-foreground); }
+
+  .parking-divider {
+    height: 1px;
+    margin: 0.5rem;
+    background: var(--foreground);
+  }
+
+  .parking-road {
+    position: relative;
+    min-height: 2.75rem;
+    overflow: hidden;
+    border-block: 1px solid color-mix(in oklch, var(--sidebar-foreground) 18%, transparent);
+    background: var(--sidebar);
+  }
+
+  .parking-road::before {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: 3px;
+    background: repeating-linear-gradient(90deg, var(--sidebar-primary) 0 30px, transparent 30px 54px);
+    animation: road-flow 3.5s linear infinite;
+  }
+
+  .parking-road::after {
+    content: '→   →   →';
+    position: absolute;
+    inset: 50% 1rem auto;
+    transform: translateY(-50%);
+    color: var(--sidebar-foreground);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.75rem;
+    text-align: center;
+  }
+
+  .parking-road-reverse::before {
+    animation-direction: reverse;
+  }
+
+  .parking-road-reverse::after {
+    content: '←   ←   ←';
+  }
+
+  .top-view-car {
+    position: absolute;
+    left: 50%;
+    top: 56%;
+    width: 2.35rem;
+    height: 4.35rem;
+    transform: translate(-50%, -50%);
+    border: 1px solid color-mix(in oklch, var(--foreground) 28%, transparent);
+    border-radius: 0.85rem 0.85rem 0.65rem 0.65rem;
+    background: linear-gradient(90deg, color-mix(in oklch, var(--vehicle-color, var(--secondary)) 72%, black) 0 10%, var(--vehicle-color, var(--card)) 18% 82%, color-mix(in oklch, var(--vehicle-color, var(--secondary)) 72%, black) 90% 100%);
+    box-shadow: 0 8px 10px -6px color-mix(in oklch, var(--foreground) 58%, transparent), inset 0 1px 0 color-mix(in oklch, white 75%, transparent);
+  }
+
+  .top-view-car::before {
+    content: '';
+    position: absolute;
+    inset: 1.05rem 0.55rem 1.15rem;
+    border-radius: 0.65rem;
+    background: linear-gradient(to bottom, var(--sidebar) 0 35%, var(--primary) 36% 64%, var(--sidebar) 65% 100%);
+    box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--card) 35%, transparent);
+  }
+
+  .top-view-car::after {
+    content: '';
+    position: absolute;
+    inset: 0.45rem -0.18rem;
+    border-block: 0.7rem solid var(--foreground);
+    border-radius: 0.45rem;
+    z-index: -1;
+  }
+
+  .vehicle-color-swatch { display: inline-block; width: 1rem; height: 1rem; border: 1px solid var(--border); border-radius: 9999px; background: var(--vehicle-color); box-shadow: inset 0 1px 0 color-mix(in oklch, white 70%, transparent); }
+  .vehicle-color-white { --vehicle-color: oklch(0.94 0.012 85); }
+  .vehicle-color-super-white { --vehicle-color: oklch(0.98 0.006 95); }
+  .vehicle-color-silver { --vehicle-color: oklch(0.72 0.015 240); }
+  .vehicle-color-gunmetal { --vehicle-color: oklch(0.48 0.025 240); }
+  .vehicle-color-black { --vehicle-color: oklch(0.22 0.015 240); }
+  .vehicle-color-red { --vehicle-color: oklch(0.48 0.2 25); }
+  .vehicle-color-scarlet { --vehicle-color: oklch(0.55 0.22 28); }
+  .vehicle-color-blue { --vehicle-color: oklch(0.38 0.12 245); }
+  .vehicle-color-sky { --vehicle-color: oklch(0.58 0.12 230); }
+  .vehicle-color-khaki { --vehicle-color: oklch(0.62 0.055 115); }
+  .vehicle-color-bronze { --vehicle-color: oklch(0.52 0.08 65); }
+  .vehicle-color-champagne { --vehicle-color: oklch(0.68 0.055 75); }
+  .vehicle-color-titanium { --vehicle-color: oklch(0.58 0.025 70); }
+  .vehicle-color-green { --vehicle-color: oklch(0.36 0.09 160); }
+  .vehicle-color-yellow { --vehicle-color: oklch(0.78 0.15 90); }
+
+  .industrial-grid::after {
+    right: 4%;
+    bottom: 2%;
+    background: color-mix(in oklch, var(--accent) 72%, transparent);
+  }
+
+  .workshop-map-viewport {
+    height: 620px;
+    min-width: 760px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--muted);
+    box-shadow: inset 0 1px 8px color-mix(in oklch, var(--foreground) 14%, transparent);
+    perspective: 1100px;
+  }
+
+  .workshop-map-ground {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--muted);
+  }
+
+  .workshop-rendered-background {
+    background-image: url('https://cdn.hubblecontent.osi.office.net/m365content/publish/5b6a7de0-2b98-4664-9115-b14363d27311/thumbnails/xxlarge.jpg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    isolation: isolate;
+  }
+
+  .workshop-rendered-background::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, color-mix(in oklch, var(--background) 10%, transparent), transparent 58%, color-mix(in oklch, var(--foreground) 14%, transparent));
+  }
+
+  .workshop-rendered-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    box-shadow: inset 0 0 70px color-mix(in oklch, var(--foreground) 22%, transparent);
+  }
+
+  .workshop-road {
+    position: absolute;
+    z-index: 1;
+    background: var(--sidebar);
+    box-shadow: inset 0 0 0 1px var(--sidebar-border), 0 5px 12px color-mix(in oklch, var(--foreground) 20%, transparent);
+  }
+
+  .workshop-road::after {
+    content: '';
+    position: absolute;
+    background: repeating-linear-gradient(90deg, var(--sidebar-primary) 0 22px, transparent 22px 42px);
+  }
+
+  .workshop-road-horizontal { left: 2%; right: 2%; top: 13%; height: 6%; }
+  .workshop-road-horizontal::after { left: 0; right: 0; top: 50%; height: 2px; }
+  .workshop-road-vertical { left: 19%; top: 2%; bottom: 2%; width: 5%; }
+  .workshop-road-vertical::after { top: 0; bottom: 0; left: 50%; width: 2px; background: repeating-linear-gradient(0deg, var(--sidebar-primary) 0 22px, transparent 22px 42px); }
+  .workshop-road-service { right: 36%; top: 16%; bottom: 2%; width: 5%; }
+  .workshop-road-service::after { top: 0; bottom: 0; left: 50%; width: 2px; background: repeating-linear-gradient(0deg, var(--sidebar-primary) 0 22px, transparent 22px 42px); }
+
+  .workshop-building {
+    position: absolute;
+    z-index: 4;
+    display: flex;
+    align-items: flex-end;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.35rem;
+    background: var(--card);
+    color: var(--card-foreground);
+    box-shadow: 10px 13px 0 color-mix(in oklch, var(--sidebar) 82%, var(--card)), 16px 20px 24px color-mix(in oklch, var(--foreground) 24%, transparent);
+    transform: translateZ(18px);
+  }
+
+  .workshop-building-roof {
+    position: absolute;
+    inset: -7px 5px 38%;
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    background: repeating-linear-gradient(90deg, var(--card) 0 16px, var(--muted) 16px 18px);
+    box-shadow: inset 0 4px 0 var(--primary);
+    transform: skewX(-7deg);
+  }
+
+  .workshop-building-label { position: relative; z-index: 2; font-size: 0.7rem; font-weight: 900; }
+  .service-building { box-shadow: 13px 17px 0 color-mix(in oklch, var(--sidebar) 86%, var(--card)), 20px 26px 30px color-mix(in oklch, var(--foreground) 28%, transparent); }
+  .service-building .workshop-building-roof { inset-bottom: 28%; background: repeating-linear-gradient(90deg, var(--card) 0 28px, var(--muted) 28px 31px); }
+  .workshop-service-doors { position: absolute; inset: auto 7% 8px 7%; height: 26%; background: repeating-linear-gradient(90deg, var(--sidebar) 0 13%, var(--card) 13% 17%); }
+  .office-building { border-radius: 0.65rem; }
+  .office-building .workshop-building-roof { background: var(--card); box-shadow: inset 0 4px 0 var(--accent-foreground); }
+  .gatehouse-building { box-shadow: 7px 9px 0 color-mix(in oklch, var(--sidebar) 82%, var(--card)), 10px 14px 18px color-mix(in oklch, var(--foreground) 22%, transparent); }
+  .workshop-wash-bays { position: absolute; inset: 40% 8% 8%; background: repeating-linear-gradient(90deg, var(--secondary) 0 27%, var(--card) 27% 34%); border-top: 3px solid var(--primary); }
+
+  .workshop-landscape { position: absolute; z-index: 3; display: flex; gap: 12px; }
+  .workshop-landscape-left { left: 2%; bottom: 5%; }
+  .workshop-landscape-right { right: 3%; top: 19%; flex-direction: column; }
+  .workshop-tree { width: 18px; height: 18px; border-radius: 50%; background: var(--primary); box-shadow: 4px 6px 0 color-mix(in oklch, var(--primary) 55%, var(--sidebar)), 7px 9px 10px color-mix(in oklch, var(--foreground) 22%, transparent); }
+
+  .workshop-parking-label { position: absolute; z-index: 6; padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 0.35rem; background: var(--popover); color: var(--popover-foreground); font-size: 0.58rem; font-weight: 900; box-shadow: 0 4px 10px color-mix(in oklch, var(--foreground) 24%, transparent); }
+
+  .digital-twin-bay {
+    position: absolute;
+    z-index: 5;
+    width: 2.25rem;
+    height: 3.75rem;
+    border: 2px solid var(--card);
+    border-radius: 0.15rem;
+    background: color-mix(in oklch, var(--sidebar) 18%, transparent);
+    box-shadow: 3px 5px 7px color-mix(in oklch, var(--foreground) 28%, transparent);
+    transform: skewY(-5deg);
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  }
+
+  .digital-twin-bay:hover { z-index: 20; transform: skewY(-5deg) translateY(-5px) scale(1.05); box-shadow: 5px 9px 12px color-mix(in oklch, var(--foreground) 28%, transparent); }
+  .digital-twin-bay-label { position: absolute; left: 50%; top: -0.9rem; transform: translateX(-50%); white-space: nowrap; font-size: 0.52rem; font-weight: 900; }
+  .digital-twin-bay .top-view-car { top: 54%; width: 1.65rem; height: 3rem; border-radius: 0.55rem; box-shadow: 3px 7px 8px color-mix(in oklch, var(--foreground) 42%, transparent), inset 0 1px 0 color-mix(in oklch, white 75%, transparent); }
+  .digital-twin-bay .top-view-car::before { inset: 0.72rem 0.38rem 0.8rem; border-radius: 0.4rem; }
+  .digital-twin-bay .top-view-car::after { inset: 0.32rem -0.12rem; border-block-width: 0.48rem; }
+  .digital-twin-bay .top-view-car > span:first-child { top: -1.05rem; font-size: 0.46rem; }
+
+  .map-experience-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    background: color-mix(in oklch, var(--card) 84%, transparent);
+    box-shadow: 0 28px 70px -45px color-mix(in oklch, var(--foreground) 62%, transparent);
+  }
+
+  .map-fixed-toolbar {
+    position: relative;
+    z-index: 40;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in oklch, var(--card) 88%, transparent);
+    color: var(--card-foreground);
+    backdrop-filter: blur(24px) saturate(150%);
+  }
+
+  .map-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+
+  .map-stage {
+    position: relative;
+    height: clamp(540px, 68vh, 760px);
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    background:
+      linear-gradient(90deg, color-mix(in oklch, var(--foreground) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(color-mix(in oklch, var(--foreground) 5%, transparent) 1px, transparent 1px),
+      var(--muted);
+    background-size: 32px 32px;
+  }
+
+  .map-pan-surface {
+    position: absolute;
+    inset: 0;
+    width: 1850px;
+    height: 1080px;
+    transform-origin: 0 0;
+    cursor: grab;
+    will-change: transform;
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .map-pan-surface.is-panning { cursor: grabbing; transition: none; }
+
+  .map-workshop-canvas {
+    position: relative;
+    min-height: 100%;
+    padding: 150px 44px 80px;
+    background:
+      linear-gradient(90deg, transparent 0 16%, color-mix(in oklch, var(--sidebar) 92%, transparent) 16% 20%, transparent 20% 78%, color-mix(in oklch, var(--sidebar) 92%, transparent) 78% 82%, transparent 82%),
+      repeating-linear-gradient(0deg, color-mix(in oklch, var(--foreground) 3%, transparent) 0 1px, transparent 1px 8px),
+      var(--muted);
+  }
+
+  .map-workshop-canvas::before {
+    content: ''; position: absolute; inset: 105px 0 auto; height: 54px;
+    background: var(--sidebar); box-shadow: inset 0 0 0 1px var(--sidebar-border), 0 8px 18px color-mix(in oklch, var(--foreground) 20%, transparent);
+  }
+  .map-workshop-canvas::after {
+    content: ''; position: absolute; z-index: 1; left: 0; right: 0; top: 131px; height: 3px;
+    background: repeating-linear-gradient(90deg, var(--sidebar-primary) 0 28px, transparent 28px 52px);
+  }
+
+  .map-building {
+    position: absolute; z-index: 4; display: grid; place-items: end start; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.65rem;
+    background: var(--card); color: var(--card-foreground); font-size: 0.75rem; font-weight: 900;
+    box-shadow: 12px 15px 0 color-mix(in oklch, var(--sidebar) 85%, var(--card)), 20px 24px 30px color-mix(in oklch, var(--foreground) 24%, transparent);
+  }
+  .map-building-office { left: 40px; top: 28px; width: 250px; height: 62px; }
+  .map-building-service { left: 610px; top: 25px; width: 430px; height: 68px; }
+  .map-building-gate { right: 80px; top: 34px; width: 170px; height: 54px; }
+
+  .map-zone { position: relative; z-index: 5; margin-bottom: 1.25rem; }
+  .map-zone-header {
+    position: sticky; left: 0; z-index: 10; display: flex; width: 100%; align-items: center; justify-content: space-between;
+    border: 1px solid var(--border); border-radius: 0.75rem 0.75rem 0 0; padding: 0.6rem 0.8rem;
+    background: color-mix(in oklch, var(--card) 92%, transparent); color: var(--card-foreground); box-shadow: 0 8px 20px color-mix(in oklch, var(--foreground) 14%, transparent);
+    backdrop-filter: blur(16px);
+  }
+  .map-zone-surface { overflow: hidden; border: 1px solid var(--border); border-top: 0; border-radius: 0 0 0.85rem 0.85rem; padding: 0.75rem; background: color-mix(in oklch, var(--background) 78%, transparent); }
+  .map-lane-label { margin-bottom: 0.25rem; padding-inline: 0.5rem; color: var(--foreground); font-size: 0.7rem; font-weight: 800; }
+  .map-parking-space { min-height: 6.25rem; }
+  .map-empty-zone { padding: 1.5rem; text-align: center; color: var(--muted-foreground); background: var(--background); }
+
+  .map-control-stack { position: absolute; z-index: 50; right: 1rem; top: 1rem; display: grid; gap: 0.45rem; }
+  .map-control-stack > button { background: var(--popover); color: var(--popover-foreground); box-shadow: 0 7px 18px color-mix(in oklch, var(--foreground) 22%, transparent); backdrop-filter: blur(16px); }
+  .map-status-overlay, .map-legend-overlay, .map-hint-overlay { position: absolute; z-index: 45; display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--border); background: color-mix(in oklch, var(--popover) 90%, transparent); color: var(--popover-foreground); box-shadow: 0 8px 24px color-mix(in oklch, var(--foreground) 18%, transparent); backdrop-filter: blur(18px); }
+  .map-status-overlay { left: 1rem; top: 1rem; border-radius: 999px; padding: 0.45rem 0.7rem; }
+  .map-status-overlay .live-dot { margin-right: 0.35rem; }
+  .map-legend-overlay { left: 1rem; bottom: 1rem; flex-wrap: wrap; border-radius: 0.75rem; padding: 0.5rem; }
+  .map-hint-overlay { right: 1rem; bottom: 1rem; border-radius: 999px; padding: 0.55rem 0.8rem; font-size: 0.7rem; font-weight: 700; }
+  .map-hint-overlay span + span::before { content: '·'; margin-right: 0.5rem; }
+
+  @media (max-width: 767px) {
+    .map-fixed-toolbar { align-items: flex-start; }
+    .map-filter-bar { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.25rem; }
+    .map-stage { height: 64vh; min-height: 500px; }
+    .map-legend-overlay { max-width: calc(100% - 5.5rem); }
+    .map-hint-overlay { display: none; }
+  }
+
+  .bento-card {
+    @apply relative overflow-hidden border text-card-foreground transition-[transform,box-shadow,border-color] duration-300;
+    background: color-mix(in oklch, var(--card) 76%, transparent);
+    border-color: color-mix(in oklch, var(--card-foreground) 16%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in oklch, white 62%, transparent), 0 18px 50px -32px color-mix(in oklch, var(--foreground) 48%, transparent);
+    backdrop-filter: blur(22px) saturate(145%);
+  }
+
+  .bento-card:hover {
+    transform: translateY(-3px) scale(1.005);
+    border-color: color-mix(in oklch, var(--primary) 36%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in oklch, white 72%, transparent), 0 24px 54px -30px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+
+  .bento-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, color-mix(in oklch, white 24%, transparent), transparent 38%);
+  }
+
+  .glass-shell {
+    background: color-mix(in oklch, var(--background) 68%, transparent);
+    border-color: color-mix(in oklch, var(--foreground) 15%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in oklch, white 55%, transparent);
+    backdrop-filter: blur(24px) saturate(150%);
+  }
+
+  .fluent-header {
+    background: color-mix(in oklch, var(--card) 82%, transparent);
+    box-shadow: 0 12px 38px -24px color-mix(in oklch, var(--primary) 55%, transparent), inset 0 1px 0 color-mix(in oklch, white 78%, transparent);
+    backdrop-filter: blur(28px) saturate(165%);
+  }
+
+  .fluent-kpi {
+    background: color-mix(in oklch, var(--card) 86%, transparent);
+    box-shadow: 0 18px 45px -34px color-mix(in oklch, var(--primary) 55%, transparent), inset 0 1px 0 color-mix(in oklch, white 80%, transparent);
+    backdrop-filter: blur(22px) saturate(150%);
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  }
+
+  .fluent-kpi:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 22px 48px -30px color-mix(in oklch, var(--primary) 62%, transparent), inset 0 1px 0 color-mix(in oklch, white 90%, transparent);
+  }
+
+  .live-dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full bg-primary;
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 55%, transparent);
+    animation: live-pulse 2s ease-out infinite;
+  }
+
+  .occupancy-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .occupancy-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-120%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklch, white 58%, transparent), transparent);
+    animation: liquid-sweep 2.8s ease-in-out infinite;
+  }
+
+  .vehicle-warning-icon {
+    transform-origin: center;
+    animation: warning-flash 0.8s ease-in-out infinite;
+    will-change: opacity, transform, filter;
+  }
+
+  .technical-label {
+    @apply text-xs font-bold text-muted-foreground;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+  .garage-kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .garage-kpi { position: relative; overflow: hidden; border-top: 4px solid var(--usage-color, var(--primary)); background: var(--usage-color, var(--card)); color: var(--usage-foreground, var(--card-foreground)); box-shadow: 0 16px 36px -28px var(--foreground); }
+  .garage-kpi.usage-green { --usage-color: oklch(0.64 0.16 145); --usage-foreground: oklch(0.16 0.04 145); }
+  .garage-kpi.usage-teal { --usage-color: oklch(0.65 0.12 180); --usage-foreground: oklch(0.16 0.035 180); }
+  .garage-kpi.usage-yellow-gold { --usage-color: oklch(0.8 0.16 85); --usage-foreground: oklch(0.2 0.04 85); }
+  .garage-kpi.usage-cyan-aqua { --usage-color: oklch(0.78 0.12 205); --usage-foreground: oklch(0.16 0.035 205); }
+  .garage-kpi.usage-lavender-pink { --usage-color: oklch(0.76 0.13 325); --usage-foreground: oklch(0.2 0.04 325); }
+  .garage-kpi.usage-coral-red { --usage-color: oklch(0.67 0.18 28); --usage-foreground: oklch(0.98 0.01 28); }
+  .garage-kpi-icon { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: 0.9rem; border: 1px solid currentColor; background: var(--usage-foreground, var(--sidebar)); color: var(--usage-color, var(--sidebar-foreground)); box-shadow: 0 8px 18px -10px var(--foreground); }
+  .zone-navigation { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; }
+  .zone-navigation-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--border); border-radius: 0.9rem; padding: 0.8rem 0.9rem; background: var(--card); color: var(--card-foreground); text-align: left; box-shadow: 0 10px 24px -22px var(--foreground); transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+  .zone-navigation-card:hover, .zone-navigation-card-active { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 16px 28px -22px var(--primary); }
+  .zone-navigation-card span:first-child { display: grid; }
+  .zone-navigation-card small { color: var(--muted-foreground); font-weight: 600; }
+  .zone-navigation-percent { border-radius: 999px; padding: 0.3rem 0.5rem; background: var(--primary); color: var(--primary-foreground); font-size: 0.75rem; font-weight: 900; }
+  .map-zoom-readout { min-width: 3.2rem; color: var(--foreground); text-align: center; font-size: 0.75rem; font-weight: 800; }
+  .garage-map-shell { position: relative; overflow: hidden; border-radius: 0 0 1rem 1rem; background: var(--sidebar); }
+  .garage-map-shell:fullscreen { width: 100vw; height: 100vh; border-radius: 0; background: var(--sidebar); }
+  .garage-map-shell:fullscreen .garage-map-viewport { height: 100vh; max-height: none; }
+  .garage-map-hint { position: absolute; right: 1rem; top: 1rem; z-index: 30; border: 1px solid var(--sidebar-border); border-radius: 999px; padding: 0.4rem 0.7rem; background: var(--sidebar); color: var(--sidebar-foreground); font-size: 0.7rem; font-weight: 800; box-shadow: 0 8px 20px -12px var(--foreground); pointer-events: none; }
+  .garage-map-viewport { height: 620px; max-height: none; overflow: hidden; touch-action: none; cursor: grab; background: radial-gradient(circle at 50% 0%, color-mix(in oklch, var(--primary) 22%, transparent), transparent 32%), var(--sidebar); }
+  .garage-map-viewport.is-panning { cursor: grabbing; }
+  .garage-map-surface { width: 1600px; min-height: 980px; padding: 0.75rem; transform-origin: 0 0; transition: transform 120ms ease-out; will-change: transform; }
+  .garage-map-viewport.is-panning .garage-map-surface { transition: none; }
+  .bay-map-space, .accommodation-parking-space { min-height: 7.1rem; margin-inline: 0.04rem; border: 2px solid var(--card); border-radius: 0.5rem 0.5rem 0.2rem 0.2rem; box-shadow: 0 9px 16px -14px var(--foreground); }
+  .bay-map-space:hover { z-index: 12; transform: translateY(-4px); filter: brightness(1.03); }
+  .accommodation-parking-space { transform: none; }
+  .accommodation-parking-space > * { transform: none; }
+  .accommodation-parking-space:hover { z-index: 12; transform: translateY(-4px); filter: brightness(1.03); }
+  .bay-available { background: var(--accent); color: var(--accent-foreground); }
+  .bay-occupied { background: var(--primary); color: var(--primary-foreground); }
+  .bay-reserved { background: var(--secondary); color: var(--secondary-foreground); }
+  .bay-maintenance { background: var(--destructive); color: var(--destructive-foreground); }
+  .bay-number-label { position: absolute; left: 50%; top: 0.55rem; z-index: 22; transform: translateX(-50%); white-space: nowrap; font-size: 0.64rem; font-weight: 950; letter-spacing: 0.03em; }
+  .bay-status-label { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .accommodation-parking-space .bay-number-label { transform: translateX(-50%); }
+  .accommodation-parking-space .bay-status-label { transform: translate(-50%, -50%); }
+  .parking-drop-target { outline: 3px solid var(--accent); outline-offset: 3px; animation: target-pulse 1s ease-in-out infinite alternate; }
+  .bay-map-space .top-view-car, .accommodation-parking-space .top-view-car { top: 57%; width: 2.55rem; height: 4.45rem; transform: translate(-50%, -50%); transition: transform 220ms ease; }
+  .bay-map-space:hover .top-view-car, .accommodation-parking-space:hover .top-view-car { transform: translate(-50%, -53%) scale(1.04); }
+  .vehicle-alerts { position: absolute; left: 50%; top: -1.35rem; z-index: 24; display: flex; transform: translateX(-50%); gap: 0.18rem; }
+  .vehicle-alert { display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 999px; background: var(--destructive); color: var(--destructive-foreground); box-shadow: 0 4px 8px -4px var(--foreground); }
+  .vehicle-registration { position: absolute; left: 50%; bottom: -1.35rem; z-index: 24; transform: translateX(-50%); border-radius: 0.25rem; padding: 0.15rem 0.35rem; background: var(--popover); color: var(--popover-foreground); white-space: nowrap; font-size: 0.62rem; font-weight: 950; box-shadow: 0 4px 8px -5px var(--foreground); }
+  .parking-road { min-height: 3rem; border-radius: 0.65rem; box-shadow: inset 0 0 0 1px var(--sidebar-border); }
+  .parking-divider { height: 0.35rem; margin-block: 0.35rem; border-radius: 999px; background: repeating-linear-gradient(90deg, var(--foreground) 0 18px, transparent 18px 28px); }
+  @keyframes target-pulse { from { filter: brightness(1); } to { filter: brightness(1.18); } }
+  @media (min-width: 1024px) { .garage-kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  @media (max-width: 767px) {
+    .garage-map-hint { left: 0.75rem; right: auto; top: 0.75rem; }
+    .garage-map-viewport { height: 68vh; min-height: 520px; }
+    .garage-map-surface { width: 1500px; min-height: 960px; }
+    .zone-navigation { display: flex; overflow-x: auto; padding-bottom: 0.25rem; }
+    .zone-navigation-card { min-width: 190px; }
+  }
+
+
+
+@keyframes warning-flash {
+  0%, 100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  50% { opacity: 0.18; transform: scale(0.82); filter: brightness(1.65); }
+}
+
+@keyframes live-pulse {
+  70% { box-shadow: 0 0 0 9px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes liquid-sweep {
+  0%, 22% { transform: translateX(-120%); }
+  72%, 100% { transform: translateX(120%); }
+}
+
+
+
+@keyframes road-test-beacon {
+  0% { box-shadow: 0 0 0 0 currentColor; filter: brightness(1.35); }
+  70% { box-shadow: 0 0 0 7px transparent; filter: brightness(1); }
+  100% { box-shadow: 0 0 0 0 transparent; filter: brightness(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot, .vehicle-warning-icon, .occupancy-shimmer::after, .parking-bay::after, .parking-road::before, .enterprise-backdrop::after, .road-test-beacon, .road-test-wallet-card { animation: none; }
+  .bento-card, .road-test-wallet-card { transition: none; }
+}
+
+@layer components {
+  /* Default mode: dark clay surfaces with a focused mint accent. Soft UI overrides remain independent. */
+  body:not(.neumorphism-mode) .industrial-grid {
+    background-color: var(--background);
+    background-image: radial-gradient(circle at 12% 8%, color-mix(in oklch, var(--primary) 18%, transparent), transparent 26rem), radial-gradient(circle at 88% 18%, color-mix(in oklch, var(--accent) 12%, transparent), transparent 28rem), linear-gradient(color-mix(in oklch, var(--border) 24%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklch, var(--border) 24%, transparent) 1px, transparent 1px);
+    background-size: auto, auto, 44px 44px, 44px 44px;
+  }
+
+  body:not(.neumorphism-mode) .enterprise-backdrop::before {
+    background: linear-gradient(to bottom, transparent 0 78%, color-mix(in oklch, var(--sidebar) 94%, transparent) 78% 100%);
+  }
+
+  body:not(.neumorphism-mode) .enterprise-backdrop::after {
+    border-top-color: color-mix(in oklch, var(--primary) 16%, transparent);
+    filter: blur(46px);
+  }
+
+  body:not(.neumorphism-mode) .glass-shell,
+  body:not(.neumorphism-mode) .fluent-header,
+  body:not(.neumorphism-mode) .map-fixed-toolbar {
+    border-color: color-mix(in oklch, var(--primary) 28%, var(--border));
+    background: color-mix(in oklch, var(--card) 91%, transparent);
+    box-shadow: inset 2px 2px 1px color-mix(in oklch, white 15%, transparent), inset -7px -9px 18px color-mix(in oklch, black 28%, transparent), 14px 18px 38px color-mix(in oklch, black 38%, transparent), -8px -8px 26px color-mix(in oklch, var(--primary) 9%, transparent);
+    backdrop-filter: blur(28px) saturate(140%);
+  }
+
+  .bento-card,
+  .fluent-kpi,
+  [data-slot='card'] {
+    border-color: color-mix(in oklch, var(--primary) 18%, var(--border));
+    background: linear-gradient(145deg, color-mix(in oklch, var(--card) 97%, white 3%), color-mix(in oklch, var(--card) 88%, black 12%));
+    box-shadow: inset 2px 2px 1px color-mix(in oklch, white 13%, transparent), inset -7px -8px 18px color-mix(in oklch, black 24%, transparent), 12px 16px 28px color-mix(in oklch, black 30%, transparent), -6px -6px 20px color-mix(in oklch, var(--primary) 7%, transparent);
+  }
+
+  .bento-card:hover,
+  .fluent-kpi:hover {
+    border-color: color-mix(in oklch, var(--primary) 62%, var(--border));
+    box-shadow: inset 2px 2px 1px color-mix(in oklch, white 17%, transparent), inset -7px -8px 18px color-mix(in oklch, black 22%, transparent), 0 0 24px color-mix(in oklch, var(--primary) 18%, transparent), 14px 20px 34px color-mix(in oklch, black 34%, transparent);
+  }
+
+  button,
+  [role='button'],
+  [data-slot='select-trigger'],
+  input,
+  textarea {
+    box-shadow: inset 1px 1px 0 color-mix(in oklch, white 14%, transparent), inset -3px -4px 8px color-mix(in oklch, black 18%, transparent), 5px 7px 14px color-mix(in oklch, black 22%, transparent);
+  }
+
+  button:hover,
+  [role='button']:hover {
+    filter: brightness(1.08) saturate(1.08);
+  }
+
+  svg:not(.vehicle-warning-icon) {
+    filter: drop-shadow(1px 2px 0 color-mix(in oklch, black 38%, transparent)) drop-shadow(-1px -1px 0 color-mix(in oklch, white 16%, transparent));
+  }
+
+  .garage-kpi-icon,
+  .fluent-header .bg-primary {
+    border: 1px solid color-mix(in oklch, currentColor 24%, transparent);
+    box-shadow: inset 2px 2px 1px color-mix(in oklch, white 38%, transparent), inset -4px -5px 10px color-mix(in oklch, black 24%, transparent), 7px 10px 18px color-mix(in oklch, black 32%, transparent);
+    transform: perspective(160px) rotateX(5deg) rotateY(-5deg);
+  }
+
+  .garage-kpi-icon svg,
+  .fluent-header .bg-primary svg {
+    transform: translateZ(12px);
+    stroke-width: 2.35;
+  }
+
+  .zone-navigation-card,
+  .map-status-overlay,
+  .map-legend-overlay,
+  .map-hint-overlay {
+    border-color: color-mix(in oklch, var(--secondary) 24%, var(--border));
+    box-shadow: inset 2px 2px 1px color-mix(in oklch, white 12%, transparent), inset -4px -5px 11px color-mix(in oklch, black 20%, transparent), 8px 11px 20px color-mix(in oklch, black 26%, transparent);
+  }
+
+  .parking-garage,
+  .garage-map-shell,
+  .map-stage {
+    border: 1px solid color-mix(in oklch, var(--primary) 28%, var(--border));
+    box-shadow: inset 0 0 42px color-mix(in oklch, black 32%, transparent), 12px 18px 36px color-mix(in oklch, black 32%, transparent), 0 0 30px color-mix(in oklch, var(--primary) 8%, transparent);
+  }
+
+  .bay-map-space,
+  .accommodation-parking-space {
+    box-shadow: inset 2px 2px 2px color-mix(in oklch, white 22%, transparent), inset -5px -7px 12px color-mix(in oklch, black 24%, transparent), 6px 9px 14px color-mix(in oklch, black 34%, transparent);
+  }
+
+  .top-view-car {
+    filter: drop-shadow(5px 8px 5px color-mix(in oklch, black 45%, transparent));
+  }
+
+  [data-slot='dialog-content'],
+  [data-slot='sheet-content'],
+  [data-slot='popover-content'],
+  [data-slot='select-content'] {
+    border-color: color-mix(in oklch, var(--primary) 28%, var(--border));
+    background: color-mix(in oklch, var(--popover) 96%, transparent);
+    box-shadow: inset 2px 2px 1px color-mix(in oklch, white 12%, transparent), inset -8px -10px 22px color-mix(in oklch, black 24%, transparent), 18px 24px 60px color-mix(in oklch, black 48%, transparent);
+    backdrop-filter: blur(30px) saturate(145%);
+  }
+
+  .road-test-tile {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .road-test-status-bar,
+  .road-test-live-track {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.38rem;
+  }
+
+  .road-test-status-bar {
+    box-shadow: 0 0 18px currentColor;
+  }
+
+  .road-test-status-active { background: var(--primary); color: var(--primary); }
+  .road-test-status-complete { background: var(--accent); color: var(--accent); }
+  .road-test-status-fail { background: var(--destructive); color: var(--destructive); }
+
+  .road-test-live-track {
+    background: var(--muted);
+    box-shadow: inset -1px 0 0 var(--border);
+  }
+
+  .road-test-live-fill {
+    position: absolute;
+    inset: auto 0 0;
+    min-height: 0.38rem;
+    background: currentColor;
+    box-shadow: 0 0 14px currentColor;
+  }
+
+  .road-test-progress-normal { color: var(--primary); }
+  .road-test-progress-warning { color: var(--accent); }
+  .road-test-progress-overdue { color: var(--destructive); }
+
+  .road-test-beacon {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: 100%;
+    width: 0.72rem;
+    height: 0.72rem;
+    border: 2px solid var(--card);
+    border-radius: 9999px;
+    background: currentColor;
+    box-shadow: 0 0 0 0 currentColor;
+    transform: translate(-50%, 50%);
+    animation: road-test-beacon 1.15s ease-out infinite;
+  }
+
+  .road-test-pocket {
+    position: relative;
+    min-height: 7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--card-foreground);
+    box-shadow: inset 0 1px 0 color-mix(in oklch, white 12%, transparent), 0 18px 34px color-mix(in oklch, black 30%, transparent);
+    overflow: hidden;
+    transition: grid-column 360ms ease, min-height 360ms ease, box-shadow 240ms ease;
+  }
+  .road-test-pocket:hover { box-shadow: inset 0 1px 0 color-mix(in oklch, white 18%, transparent), 0 24px 42px color-mix(in oklch, black 38%, transparent); }
+  .road-test-pocket-heading { position: relative; z-index: 30; display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0.65rem 0; font-size: 0.68rem; font-weight: 800; }
+  .road-test-pocket-heading strong { display: grid; min-width: 1.4rem; height: 1.4rem; place-items: center; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); font-size: 0.68rem; }
+  .road-test-pocket-stage { position: relative; width: 64%; height: 5.35rem; margin: 0.1rem auto 0.35rem; perspective: 900px; cursor: pointer; }
+  .road-test-pocket-stack { position: absolute; inset: 2.35rem 0 0.35rem; transform-style: preserve-3d; }
+  .road-test-wallet-card {
+    --wallet-index: 0;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 2.675rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--primary) 34%, var(--border));
+    border-radius: 0.55rem;
+    padding: 0.2rem;
+    background: linear-gradient(145deg, color-mix(in oklch, var(--card) 96%, var(--primary) 4%), color-mix(in oklch, var(--card) 84%, black 16%));
+    color: var(--card-foreground);
+    box-shadow: inset 1px 1px 1px color-mix(in oklch, white 14%, transparent), inset -3px -3px 7px color-mix(in oklch, black 22%, transparent), 0 7px 12px color-mix(in oklch, black 44%, transparent);
+    backdrop-filter: none;
+    transform: translate3d(0, calc(var(--wallet-index) * -0.78rem), calc(var(--wallet-index) * -10px)) rotateX(calc(var(--wallet-index) * 1.4deg));
+    transform-origin: 50% 0;
+    animation: wallet-stack-cycle 7.2s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
+    animation-delay: calc(var(--wallet-index) * -0.72s);
+    transition: inset 420ms cubic-bezier(0.2, 0.8, 0.2, 1), width 420ms ease, height 420ms ease, transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 420ms ease;
+    will-change: translate, rotate, box-shadow;
+  }
+  .road-test-wallet-card.age-mid { border-color: color-mix(in oklch, var(--accent) 48%, var(--border)); background: linear-gradient(145deg, color-mix(in oklch, var(--card) 92%, var(--accent) 8%), color-mix(in oklch, var(--card) 82%, black 18%)); }
+  .road-test-wallet-card.age-old { border-color: color-mix(in oklch, var(--destructive) 50%, var(--border)); background: linear-gradient(145deg, color-mix(in oklch, var(--card) 90%, var(--destructive) 10%), color-mix(in oklch, var(--card) 80%, black 20%)); }
+  .road-test-number-plate { position: relative; z-index: 3; display: block; width: max-content; max-width: 100%; overflow: hidden; border: 1px solid var(--border); border-radius: 0.2rem; padding: 0.06rem 0.24rem; background: var(--popover); color: var(--popover-foreground); text-overflow: ellipsis; white-space: nowrap; font-size: 0.52rem; line-height: 0.72rem; font-weight: 950; letter-spacing: 0.06em; box-shadow: 0 2px 5px color-mix(in oklch, black 30%, transparent); }
+  .road-test-wallet-card img { display: block; width: 50%; height: 0.9rem; margin: 0.12rem auto 0; border: 1px solid var(--border); border-radius: 0.3rem; object-fit: cover; box-shadow: 0 3px 6px color-mix(in oklch, black 28%, transparent); }
+  .road-test-pocket-lip { position: absolute; z-index: 20; inset: auto 0 -0.15rem; height: 1.1rem; border: 1px solid var(--border); border-radius: 0.55rem 0.55rem 0.15rem 0.15rem; background: linear-gradient(180deg, color-mix(in oklch, var(--card) 98%, white 2%), color-mix(in oklch, var(--card) 76%, black 24%)); box-shadow: inset 0 1px 0 color-mix(in oklch, white 16%, transparent), 0 -5px 10px color-mix(in oklch, black 20%, transparent); pointer-events: none; }
+  .road-test-pocket:hover .road-test-wallet-card { animation-play-state: paused; }
+  .road-test-pocket.is-expanded { grid-column: 1 / -1; min-height: 19rem; }
+  .road-test-pocket.is-expanded .road-test-pocket-stage { width: 100%; height: auto; min-height: 15rem; }
+  .road-test-pocket.is-expanded .road-test-pocket-stack { position: relative; inset: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 0.75rem; padding: 0.5rem 0.35rem 2.2rem; }
+  .road-test-pocket.is-expanded .road-test-wallet-card { position: relative; inset: auto; width: 100%; height: 8.5rem; transform: none; animation: none; }
+  .road-test-pocket.is-expanded .road-test-wallet-card img { height: 3.35rem; }
+  @keyframes wallet-stack-cycle {
+    0%, 100% { translate: 0 0; rotate: 0deg; box-shadow: inset 0 1px 0 color-mix(in oklch, white 32%, transparent), 0 12px 20px color-mix(in oklch, black 44%, transparent); }
+    25% { translate: 0 -0.34rem; rotate: -0.35deg; box-shadow: inset 0 1px 0 color-mix(in oklch, white 36%, transparent), 0 18px 28px color-mix(in oklch, black 48%, transparent); }
+    50% { translate: 0 -0.12rem; rotate: 0.18deg; box-shadow: inset 0 1px 0 color-mix(in oklch, white 34%, transparent), 0 15px 24px color-mix(in oklch, black 46%, transparent); }
+    75% { translate: 0 0.12rem; rotate: 0deg; box-shadow: inset 0 1px 0 color-mix(in oklch, white 30%, transparent), 0 9px 17px color-mix(in oklch, black 40%, transparent); }
+  }
+  @media (max-width: 639px) { .road-test-pocket.is-expanded .road-test-pocket-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+}
+
+

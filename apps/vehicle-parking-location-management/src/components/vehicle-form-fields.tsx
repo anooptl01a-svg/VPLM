@@ -1,0 +1,84 @@
+import { type ChangeEvent } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+export const toyotaColors = [
+  { name: 'Platinum White Pearl', className: 'vehicle-color-white' },
+  { name: 'Super White II', className: 'vehicle-color-super-white' },
+  { name: 'Silver Metallic', className: 'vehicle-color-silver' },
+  { name: 'Metal Stream Metallic', className: 'vehicle-color-gunmetal' },
+  { name: 'Attitude Black Mica', className: 'vehicle-color-black' },
+  { name: 'Emotional Red II', className: 'vehicle-color-red' },
+  { name: 'Scarlet Metallic', className: 'vehicle-color-scarlet' },
+  { name: 'Dark Blue Mica', className: 'vehicle-color-blue' },
+  { name: 'Nebula Blue Metallic', className: 'vehicle-color-sky' },
+  { name: 'Urban Khaki', className: 'vehicle-color-khaki' },
+  { name: 'Oxide Bronze Metallic', className: 'vehicle-color-bronze' },
+  { name: 'Avant-Garde Bronze', className: 'vehicle-color-champagne' },
+  { name: 'Precious Metal', className: 'vehicle-color-titanium' },
+  { name: 'Dark Emerald', className: 'vehicle-color-green' },
+  { name: 'Mustard Yellow', className: 'vehicle-color-yellow' },
+] as const;
+
+export const vehicleModels = [
+  '4Runner', '86', 'Alphard', 'Avalon', 'Avanza', 'Aygo X', 'bZ4X', 'C-HR', 'Camry', 'Century', 'Corolla',
+  'Corolla Cross', 'Corolla Hatchback', 'Corolla Touring Sports', 'Crown', 'FJ Cruiser', 'Fortuner', 'GR Corolla',
+  'GR Supra', 'GR Yaris', 'Grand Highlander', 'Hiace', 'Highlander', 'Hilux', 'Land Cruiser', 'Land Cruiser Prado',
+  'Mirai', 'Prius', 'Proace', 'Raize', 'RAV4', 'Sequoia', 'Sienna', 'Tacoma', 'Tundra', 'Urban Cruiser',
+  'Veloz', 'Venza', 'Yaris', 'Yaris Cross',
+  'CT', 'ES', 'GS', 'GX', 'GX 550', 'HS', 'IS', 'LBX', 'LC', 'LC 500', 'LC 500h', 'LFA', 'LM', 'LM 350h',
+  'LS', 'LS 500', 'LS 500h', 'LX', 'LX 600', 'NX', 'NX 250', 'NX 350', 'NX 350h', 'RC', 'RC F', 'RX',
+  'RX 350', 'RX 350h', 'RX 500h', 'RZ', 'RZ 450e', 'SC', 'TX', 'TX 350', 'TX 500h', 'UX', 'UX 250h',
+] as const;
+
+export const normalizeVehicleModel = (model: string): string => model.replace(/^(Toyota|Lexus)\s+/i, '').trim();
+
+export interface VehicleFormData {
+  plateNumber: string;
+  vin: string;
+  brand: string;
+  model: string;
+  color: string;
+  customerName: string;
+  driverOwner: string;
+  department: string;
+}
+
+export const emptyVehicleForm: VehicleFormData = {
+  plateNumber: '', vin: '', brand: 'Toyota', model: '', color: 'Platinum White Pearl', customerName: '', driverOwner: '', department: '',
+};
+
+export function vehicleColorClass(color?: string) {
+  const normalizedColor = color?.trim().toLowerCase() ?? '';
+  const match = toyotaColors.find((item: (typeof toyotaColors)[number]) => item.name.toLowerCase() === normalizedColor || (normalizedColor && normalizedColor.includes(item.name.split(' ')[0].toLowerCase())));
+  return match?.className ?? 'vehicle-color-silver';
+}
+
+export function VehicleFormFields({ value, onChange, idPrefix, assignmentMode = false }: { value: VehicleFormData; onChange: (value: VehicleFormData) => void; idPrefix: string; assignmentMode?: boolean }) {
+  const update = (field: keyof VehicleFormData, fieldValue: string) => onChange({ ...value, [field]: fieldValue });
+  const fields: { key: keyof VehicleFormData; label: string; placeholder: string }[] = assignmentMode
+    ? [
+        { key: 'plateNumber', label: 'Registration number', placeholder: 'ABC-1234' },
+        { key: 'vin', label: 'VIN / chassis number', placeholder: 'Enter VIN' },
+      ]
+    : [
+        { key: 'plateNumber', label: 'Registration number', placeholder: 'ABC-1234' },
+        { key: 'vin', label: 'VIN / chassis number', placeholder: 'Enter VIN' },
+        { key: 'brand', label: 'Vehicle make', placeholder: 'Toyota' },
+        { key: 'customerName', label: 'Customer / company', placeholder: 'Customer name' },
+        { key: 'driverOwner', label: 'Driver / owner', placeholder: 'Driver or owner' },
+        { key: 'department', label: 'Department', placeholder: 'Workshop intake' },
+      ];
+  const normalizedModel = normalizeVehicleModel(value.model);
+  const modelOptions = normalizedModel && !vehicleModels.includes(normalizedModel as (typeof vehicleModels)[number])
+    ? [normalizedModel, ...vehicleModels]
+    : vehicleModels;
+  const storedColor = value.color.trim();
+  const hasKnownColor = toyotaColors.some((color: (typeof toyotaColors)[number]) => color.name === storedColor);
+  return <div className="grid gap-4 sm:grid-cols-2">
+    {fields.map((field: { key: keyof VehicleFormData; label: string; placeholder: string }) => <div key={field.key} className="space-y-2"><Label htmlFor={`${idPrefix}-${field.key}`}>{field.label}</Label><Input id={`${idPrefix}-${field.key}`} value={value[field.key]} onChange={(event: ChangeEvent<HTMLInputElement>) => update(field.key, field.key === 'plateNumber' ? event.target.value.toUpperCase() : event.target.value)} placeholder={field.placeholder} /></div>)}
+    <div className="space-y-2 sm:col-span-2"><Label>Vehicle Model</Label><Select value={normalizedModel || 'none'} onValueChange={(selected: string) => update('model', selected === 'none' ? '' : selected)}><SelectTrigger className="h-12 rounded-full"><SelectValue placeholder="Select vehicle model" /></SelectTrigger><SelectContent><SelectItem value="none">Select vehicle model</SelectItem>{modelOptions.filter((model: string) => model).map((model: string) => <SelectItem key={model} value={model}>{model}</SelectItem>)}</SelectContent></Select></div>
+    <div className="space-y-2 sm:col-span-2"><Label>Vehicle colour</Label><Select value={storedColor || 'none'} onValueChange={(selected: string) => update('color', selected === 'none' ? '' : selected)}><SelectTrigger className="h-12 rounded-full"><SelectValue placeholder="Select vehicle colour" /></SelectTrigger><SelectContent><SelectItem value="none">Select vehicle colour</SelectItem>{storedColor && !hasKnownColor && <SelectItem value={storedColor}><span className="flex items-center gap-3"><span className={`vehicle-color-swatch ${vehicleColorClass(storedColor)}`} aria-hidden="true" />{storedColor}</span></SelectItem>}{toyotaColors.filter((color: (typeof toyotaColors)[number]) => color.name).map((color: (typeof toyotaColors)[number]) => <SelectItem key={color.name} value={color.name}><span className="flex items-center gap-3"><span className={`vehicle-color-swatch ${color.className}`} aria-hidden="true" />{color.name}</span></SelectItem>)}</SelectContent></Select></div>
+  </div>;
+}

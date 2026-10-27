@@ -1,0 +1,11 @@
+.agent/
+.internal/
+node_modules/
+**/node_modules/
+**/dist/
+**/dist-ssr/
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
