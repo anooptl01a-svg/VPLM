@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { applyWorkspaceSnapshot, clearWorkspaceSnapshot } from '@/lib/workspace-storage';
 import { loadWorkspace } from '@/lib/workspace-cloud';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase, supabaseConfigurationError } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 
 function AuthScreen() {
@@ -143,7 +143,8 @@ export default function HomePage() {
             <CardDescription>This app will not fall back to local-only accounts or data.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <p>Set the GitHub repository Actions variables <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>, then rerun the “Publish website” workflow.</p>
+            <p role="alert">{supabaseConfigurationError}</p>
+            <p>In GitHub Settings → Secrets and variables → Actions → Variables, set <code>VITE_SUPABASE_URL</code> to the exact Project URL and <code>VITE_SUPABASE_ANON_KEY</code> to the exact publishable key shown in Supabase Project Settings → API. Replace the whole value; do not enter the variable name or an example placeholder. Then rerun the “Publish website” workflow.</p>
             <p>The publishable key is intended for browser use; never use the Supabase service-role key or database password here.</p>
           </CardContent>
         </Card>
