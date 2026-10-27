@@ -10,6 +10,18 @@ import { loadWorkspace } from '@/lib/workspace-cloud';
 import { isSupabaseConfigured, supabase, supabaseConfigurationError } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 
+const workspaceLoadErrorMessage = (error: unknown): string => {
+  if (typeof error === 'object' && error !== null && 'code' in error && 'message' in error) {
+    const code = error.code;
+    if (code === 'PGRST205' || code === '42P01') {
+      return 'The Supabase workspace tables are missing. Run the project schema.sql in your Supabase SQL Editor, then grant your account workspace membership.';
+    }
+    if (typeof error.message === 'string') return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return 'Unable to load the shared workspace. Check the Supabase schema and account membership.';
+};
+
 function AuthScreen() {
   const client = supabase;
   const [isSignUp, setIsSignUp] = useState(false);
@@ -127,7 +139,7 @@ export default function HomePage() {
       setWorkspaceLoaded(true);
     }).catch((error: unknown) => {
       if (!active) return;
-      setWorkspaceError(error instanceof Error ? error.message : 'Unable to load the shared workspace.');
+      setWorkspaceError(workspaceLoadErrorMessage(error));
       setWorkspaceUserId(session.user.id);
       setWorkspaceLoaded(true);
     });
@@ -164,6 +176,9 @@ export default function HomePage() {
             <CardDescription role="alert">{workspaceError}</CardDescription>
           </CardHeader>
           <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Setup instructions and the SQL schema are in the <a className="underline" href="https://github.com/anooptl01a-svg/VPLM#setup-secure-cloud-storage">repository README</a>.
+            </p>
             <Button variant="outline" onClick={() => { void client.auth.signOut(); }}>Sign out</Button>
           </CardContent>
         </Card>
