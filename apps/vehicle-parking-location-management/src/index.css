@@ -838,8 +838,7 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
   .garage-map-viewport.is-panning .garage-map-surface { transition: none; }
   .live-parking-garage .live-parking-lane { border-color: transparent; background: color-mix(in oklch, var(--muted) 92%, var(--foreground) 8%); }
   .live-parking-garage .parking-space { border: 0; background: transparent; color: var(--foreground); }
-  .live-parking-garage .parking-space::before { position: absolute; top: 0.45rem; right: 0; bottom: 0.45rem; width: 1px; background: color-mix(in oklch, var(--card) 72%, transparent); content: ""; pointer-events: none; }
-  .live-parking-garage .parking-space:last-child::before { display: none; }
+  .live-parking-garage .parking-space::before { content: none; }
   .live-parking-garage .parking-space.bay-available,
   .live-parking-garage .parking-space.bay-occupied,
   .live-parking-garage .parking-space.bay-reserved,
