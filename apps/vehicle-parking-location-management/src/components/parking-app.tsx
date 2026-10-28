@@ -579,7 +579,7 @@ function TopViewCar({ vehicle, roadTest, xParked = false, onSelect }: { vehicle:
   return (
     <div className={`top-view-car ${vehicleColorClass(vehicle.color)} ${xParked ? 'x-parked-car' : ''}`} aria-hidden="true" onClick={onSelect ? (event: React.MouseEvent<HTMLDivElement>) => { event.stopPropagation(); onSelect(); } : undefined}>
       {(roadTest || warnings.length > 0) && <span className="vehicle-alerts">{roadTest && <span className="vehicle-alert" title={`${roadTest.status}: ${roadTest.purpose}`}><Bell className="h-3.5 w-3.5" /></span>}{warnings.map((warning: 'battery' | 'brake' | 'fuel') => <span key={warning} className="vehicle-alert vehicle-warning-icon" title={warningLabel(warning)}>{warning === 'battery' ? <CarBatteryWarningIcon className="h-4 w-4" /> : warning === 'brake' ? <BrakeWarningLampIcon className="h-4 w-4" /> : <Fuel className="h-3.5 w-3.5" />}</span>)}</span>}
-      <span className="vehicle-registration">{vehicle.plateNumber}</span>
+      <span className={`vehicle-registration ${xParked ? 'rotated-numbers' : ''}`}>{vehicle.plateNumber}</span>
     </div>
   );
 }
