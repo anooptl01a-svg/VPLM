@@ -354,6 +354,16 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
     padding-inline: 0.5rem;
   }
 
+  .parking-row-x-enabled { grid-template-columns: repeat(23, minmax(4.75rem, 1fr)); }
+  .x-parking-spaces { display: grid; grid-template-columns: repeat(23, minmax(4.75rem, 1fr)); gap: 0; padding-inline: 0.5rem; }
+  .x-parking-row-label { padding: 0.2rem 0.75rem; color: var(--primary); font-size: 0.68rem; font-weight: 850; letter-spacing: 0.04em; text-transform: uppercase; }
+  .x-parking-space { position: relative; min-height: 4.5rem; border-inline: 2px solid color-mix(in oklch, var(--primary) 55%, var(--card)); background: color-mix(in oklch, var(--primary) 7%, var(--muted)); color: inherit; }
+  .x-parking-space:disabled { cursor: default; opacity: 1; }
+  .x-parking-space:first-child { border-left-width: 3px; }
+  .x-parking-space:last-child { border-right-width: 3px; }
+  .x-parking-space .x-parked-car { top: 50%; width: 2.55rem; height: 4.45rem; transform: translate(-50%, -50%) rotate(90deg); }
+  .x-parking-space:hover .x-parked-car { transform: translate(-50%, -50%) rotate(90deg) scale(1.04); }
+
   .parking-row-facing .parking-space {
     border-top: 3px solid var(--card);
     border-bottom: 0;
@@ -842,14 +852,13 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
   .accommodation-parking-space .bay-status-label { transform: translate(-50%, -50%); }
   .parking-drop-target { outline: 3px solid var(--accent); outline-offset: 3px; animation: target-pulse 1s ease-in-out infinite alternate; }
   .bay-map-space .top-view-car, .accommodation-parking-space .top-view-car { top: 57%; width: 2.55rem; height: 4.45rem; transform: translate(-50%, -50%); transition: transform 220ms ease; }
-  .parking-space.x-parking-anchor, .bay-map-space.x-parking-anchor { z-index: 16; }
-  .parking-space .x-parked-car, .bay-map-space .x-parked-car { top: -1rem; width: 2.55rem; height: 4.45rem; z-index: 15; transform: translate(-50%, -50%) rotate(90deg); }
   .bay-map-space:hover .top-view-car, .accommodation-parking-space:hover .top-view-car { transform: translate(-50%, -53%) scale(1.04); }
-  .parking-space:hover .x-parked-car, .bay-map-space:hover .x-parked-car { transform: translate(-50%, -53%) rotate(90deg) scale(1.04); }
+  .bay-map-space .x-parked-car { top: -1rem; width: 2.55rem; height: 4.45rem; z-index: 15; transform: translate(-50%, -50%) rotate(90deg); }
+  .bay-map-space:hover .x-parked-car { transform: translate(-50%, -53%) rotate(90deg) scale(1.04); }
   .vehicle-alerts { position: absolute; left: 50%; top: -1.35rem; z-index: 24; display: flex; transform: translateX(-50%); gap: 0.18rem; }
   .vehicle-alert { display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 999px; background: var(--destructive); color: var(--destructive-foreground); box-shadow: 0 4px 8px -4px var(--foreground); }
   .vehicle-registration { position: absolute; left: 50%; top: -0.75rem; z-index: 24; transform: translateX(-50%); border-radius: 0.25rem; padding: 0.15rem 0.35rem; background: var(--popover); color: var(--popover-foreground); white-space: nowrap; font-size: 0.62rem; font-weight: 950; box-shadow: 0 4px 8px -5px var(--foreground); }
-  .x-parked-car .vehicle-registration { transform: translateX(-50%); padding: 0.25rem 0.48rem; font-size: 0.7rem; }
+  .x-parked-car .vehicle-registration { transform: translateX(-50%) rotate(90deg); }
   .parking-road { min-height: 3rem; border-radius: 0.65rem; box-shadow: inset 0 0 0 1px var(--sidebar-border); }
   .parking-divider { height: 0.35rem; margin-block: 0.35rem; border-radius: 999px; background: repeating-linear-gradient(90deg, var(--foreground) 0 18px, transparent 18px 28px); }
   @keyframes target-pulse { from { filter: brightness(1); } to { filter: brightness(1.18); } }

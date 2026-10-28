@@ -2,7 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { format } from 'date-fns';
 import { BatteryWarning, Camera, CarFront, CircleStop, Fuel, History, MapPin, Navigation, Pencil, Route, Save, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { mapParkingLocationId, type Movement, type ParkingLocation, type Vehicle } from '@/lib/parking-data';
+import { mapParkingLocationId, supportsXParkingLocation, type Movement, type ParkingLocation, type Vehicle } from '@/lib/parking-data';
 import type { RoadTestRecord } from '@/lib/road-test-data';
 import { VehicleFormFields, type VehicleFormData } from '@/components/vehicle-form-fields';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +90,7 @@ export function VehicleOverviewDialog(props: VehicleOverviewDialogProps) {
   const location = locations.find((item: ParkingLocation) => mapParkingLocationId(item.id) === mapParkingLocationId(vehicle.currentLocationId));
   const history = movements.filter((item: Movement) => item.vehicleId === vehicle.id);
   const lastMovement = history[0];
-  const availableBays = locations.filter((item: ParkingLocation) => item.status === 'Available');
+  const availableBays = locations.filter((item: ParkingLocation) => item.status === 'Available' && (vehicle.xParking !== 'Yes' || supportsXParkingLocation(item)));
   const availableZones = Array.from(new Set(availableBays.map((item: ParkingLocation) => item.zone))).filter((zone: string) => zone);
   const zoneBays = availableBays.filter((item: ParkingLocation) => item.zone === targetZone);
   const updateGps = () => {
@@ -141,6 +141,9 @@ export function VehicleOverviewDialog(props: VehicleOverviewDialogProps) {
   const saveEdit = () => {
     if (!interactive) return;
     if (!draft?.plateNumber.trim()) return toast.error('Registration number is required.');
+    if (draft.xParking === 'Yes' && vehicle.xParking !== 'Yes' && !supportsXParkingLocation(location)) {
+      return toast.error('X Parking is only available in the marked A and B bay rows.');
+    }
     interactive.onUpdate(vehicle.id, {
       ...draft,
       plateNumber: draft.plateNumber.trim().toUpperCase(),
@@ -168,7 +171,7 @@ export function VehicleOverviewDialog(props: VehicleOverviewDialogProps) {
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
       <div className="space-y-4"><div className="relative min-h-52 overflow-hidden rounded-2xl bg-muted">{vehicle.photoUrls[0] ? <img src={vehicle.photoUrls[0]} alt={`${vehicle.plateNumber} vehicle`} className="h-52 w-full object-cover" /> : <div className="grid h-52 place-items-center text-muted-foreground"><CarFront className="h-16 w-16" /></div>}<Badge className="absolute left-3 top-3">{vehicle.operationalStatus}</Badge></div>{interactive && <><input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={uploadPhoto} /><Button variant="outline" className="w-full" onClick={() => photoRef.current?.click()}><Camera /> Capture or upload photo</Button></>}
         <Tabs defaultValue="profile"><TabsList className="w-full"><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="history">Parking history</TabsTrigger><TabsTrigger value="gps">GPS map</TabsTrigger></TabsList>
-          <TabsContent value="profile" className="space-y-4">{isEditing && draft ? <div className="rounded-2xl border bg-card p-4 text-card-foreground"><VehicleFormFields value={draft} onChange={setDraft} idPrefix="profile" showXParking /></div> : <div className="grid gap-3 sm:grid-cols-2">{profileFields.map(([label, value]) => <div key={label} className="rounded-lg bg-muted p-3"><p className="text-xs font-bold text-muted-foreground">{label}</p><p className="font-semibold text-foreground">{value || '—'}</p></div>)}</div>}</TabsContent>
+          <TabsContent value="profile" className="space-y-4">{isEditing && draft ? <div className="rounded-2xl border bg-card p-4 text-card-foreground"><VehicleFormFields value={draft} onChange={setDraft} idPrefix="profile" showXParking allowXParking={vehicle.xParking === 'Yes' || supportsXParkingLocation(location)} /></div> : <div className="grid gap-3 sm:grid-cols-2">{profileFields.map(([label, value]) => <div key={label} className="rounded-lg bg-muted p-3"><p className="text-xs font-bold text-muted-foreground">{label}</p><p className="font-semibold text-foreground">{value || '—'}</p></div>)}</div>}</TabsContent>
           <TabsContent value="history" className="space-y-2">{history.length ? history.map((item: Movement) => <div key={item.id} className="flex gap-3 border-b py-3"><History className="mt-1 h-4 w-4 shrink-0" /><div><p className="font-semibold">{item.movementType}: {locationLabel(item.fromLocationId, locations)} → {locationLabel(item.toLocationId, locations)}</p><p className="text-sm text-muted-foreground">{format(new Date(item.actionDateTime), 'dd MMM yyyy, HH:mm')} · {item.performedBy}</p>{item.notes && <p className="mt-1 text-sm">{item.notes}</p>}</div></div>) : <p className="py-4 text-sm text-muted-foreground">No movement history recorded.</p>}</TabsContent>
           <TabsContent value="gps"><div className="relative h-64 overflow-hidden rounded-2xl bg-muted"><div className="absolute inset-0 [background-image:linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] [background-size:28px_28px]" /><div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary p-3 text-primary-foreground shadow-xl"><MapPin /></div><div className="absolute bottom-3 left-3 rounded-lg bg-popover p-3 text-sm text-popover-foreground shadow"><strong>{vehicle.latitude?.toFixed(5) ?? 'GPS pending'}, {vehicle.longitude?.toFixed(5) ?? '—'}</strong><p>{vehicle.distanceToBayMeters ?? '—'} m from assigned bay · {vehicle.geofenceStatus}</p></div></div>{interactive && <Button className="mt-3 w-full" onClick={updateGps}><Navigation /> Update current location</Button>}</TabsContent>
         </Tabs>

@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Bell, CalendarDays, Check, CircleParking, History, Wrench, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { VehicleFormFields, type VehicleFormData } from '@/components/vehicle-form-fields';
-import type { ParkingLocation, Vehicle } from '@/lib/parking-data';
+import { supportsXParkingLocation, type ParkingLocation, type Vehicle } from '@/lib/parking-data';
 import type { BayAuditEntry, BayMaintenance, BayReservation } from '@/lib/bay-management-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -84,7 +84,7 @@ export function BayInformationDialog({ bay, open, onOpenChange, vehicle, reserva
             <TabsContent value="assignment" className="space-y-4">
               <section className="space-y-5 rounded-xl border bg-card p-4 text-card-foreground">
                 <div><h3 className="flex items-center gap-2 font-bold"><CircleParking /> Assign vehicle to {bay.zone}-{bay.bayNumber}</h3><p className="mt-1 text-sm text-muted-foreground">Complete the same vehicle profile used in Vehicle assignment. This bay is selected automatically.</p></div>
-                <VehicleFormFields value={assignmentVehicle} onChange={onAssignmentVehicleChange} idPrefix="bay-assignment" assignmentMode />
+                <VehicleFormFields value={assignmentVehicle} onChange={onAssignmentVehicleChange} idPrefix="bay-assignment" assignmentMode allowXParking={supportsXParkingLocation(bay)} />
                 <div className="grid gap-3 rounded-lg bg-muted p-3 text-muted-foreground sm:grid-cols-2"><Info label="Parking zone" value={bay.zone} /><Info label="Selected bay" value={`${bay.zone}-${bay.bayNumber} · ${bay.section ?? 'Main'} / ${bay.lane}`} /></div>
                 <Button size="lg" onClick={onAssignVehicle} disabled={!canAssignVehicle}><CircleParking /> Assign vehicle</Button>
               </section>

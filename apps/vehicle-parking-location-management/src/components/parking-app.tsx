@@ -21,6 +21,7 @@ import { getVehicleRoadTest, loadRoadTestAudit, loadRoadTests, type RoadTestReco
 import {
   mapParkingLocationId,
   reconcileParkingLayout,
+  supportsXParkingLocation,
   type Movement, type ParkingLocation, type Reservation, type Vehicle,
 } from '@/lib/parking-data';
 import { loadOfflineState, pruneExpiredAuditEventPhotos, pruneExpiredMovementPhotos, pruneExpiredVehiclePhotos, saveOfflineState, type OfflineAuditEvent } from '@/lib/offline-store';
@@ -308,6 +309,8 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
     if (!validation.valid) { toast.error(validation.error); return false; }
     if (!toUnassignedBay && !location) { toast.error('Choose an available bay or assign to the Unassigned Bay tray.'); return false; }
     const isXParking = validation.value.xParking === 'Yes';
+    if (isXParking && (toUnassignedBay || !location)) { toast.error('Choose an X Parking space beside a supported A or B bay.'); return false; }
+    if (location && isXParking && !supportsXParkingLocation(location)) { toast.error('X Parking is only available in the marked A and B bay rows.'); return false; }
     if (location && !isXParking && (location.status !== 'Available' || linkedVehicleLocationIds.has(normalizedBayId))) { toast.error('This bay is no longer available.'); return false; }
     if (location && isXParking && activeVehicles.some((item: Vehicle) => item.xParking === 'Yes' && parkingRecordKey(item.currentLocationId) === normalizedBayId && item.id !== existing?.id)) {
       toast.error('This bay already has an X-Parked vehicle in front of it. Choose another bay.');
@@ -363,6 +366,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
     if (!selectedVehicle?.currentLocationId || !newLocationId) return toast.error('Select a parked vehicle and an available destination.');
     const target = locations.find((item: ParkingLocation) => item.id === newLocationId);
     if (!target || target.status !== 'Available') return toast.error('Destination is occupied or reserved.');
+    if (selectedVehicle.xParking === 'Yes' && !supportsXParkingLocation(target)) return toast.error('X-Parked vehicles can only be moved to the marked A and B bay rows.');
     const previous = selectedVehicle.currentLocationId;
     setLocations((current: ParkingLocation[]) => current.map((item: ParkingLocation) => item.id === previous ? { ...item, status: 'Available' } : item.id === newLocationId ? { ...item, status: 'Occupied' } : item));
     setVehicles((current: Vehicle[]) => current.map((item: Vehicle) => item.id === selectedVehicle.id ? { ...item, status: 'Transferred', currentLocationId: newLocationId, assignedDate: new Date().toISOString(), assignedBy: actor } : item));
@@ -696,6 +700,7 @@ function Dashboard({ locations, setLocations, movements, vehicles, setVehicles, 
     const vehicle = activeVehicles.find((item: Vehicle) => item.id === vehicleId);
     const destination = locations.find((item: ParkingLocation) => parkingRecordKey(item.id) === parkingRecordKey(destinationId));
     if (!vehicle || !destination || destination.status !== 'Available') return toast.error('Choose a vacant destination bay.');
+    if (vehicle.xParking === 'Yes' && !supportsXParkingLocation(destination)) return toast.error('X-Parked vehicles can only be moved to the marked A and B bay rows.');
     const previous = vehicle.currentLocationId;
     setLocations((current: ParkingLocation[]) => current.map((item: ParkingLocation) => parkingRecordKey(item.id) === parkingRecordKey(previous) ? { ...item, status: 'Available' } : parkingRecordKey(item.id) === parkingRecordKey(destination.id) ? { ...item, status: 'Occupied' } : item));
     setVehicles((current: Vehicle[]) => current.map((item: Vehicle) => item.id === vehicleId ? { ...item, currentLocationId: destination.id, status: previous ? 'Transferred' : 'Assigned', assignedDate: new Date().toISOString(), assignedBy: actor, operationalStatus: 'Parked' } : item));
@@ -719,6 +724,10 @@ function Dashboard({ locations, setLocations, movements, vehicles, setVehicles, 
 
   const updateVehicle = (vehicleId: string, changes: Partial<Vehicle>, auditAction: string) => {
     const vehicle = vehicles.find((item: Vehicle) => item.id === vehicleId);
+    if (changes.xParking === 'Yes' && vehicle && vehicle.xParking !== 'Yes') {
+      const location = locations.find((item: ParkingLocation) => parkingRecordKey(item.id) === parkingRecordKey(vehicle.currentLocationId));
+      if (!supportsXParkingLocation(location)) { toast.error('X Parking is only available in the marked A and B bay rows.'); return; }
+    }
 
     const updated = vehicle ? { ...vehicle, ...changes } : undefined;
     setVehicles((current: Vehicle[]) => current.map((item: Vehicle) => item.id === vehicleId ? { ...item, ...changes } : item));
@@ -776,17 +785,25 @@ function Dashboard({ locations, setLocations, movements, vehicles, setVehicles, 
                     });
                     const isCollapsed = collapsedZones.has(zoneItem.zone);
                     const lanes = Array.from(new Set(zoneLocations.map((location: ParkingLocation) => location.lane.trim()).filter((lane: string) => Boolean(lane))));
+                    const renderXParkingSpaces = (bays: ParkingLocation[]) => <div className="x-parking-spaces" aria-label="X Parking spaces">
+                      {bays.map((bay: ParkingLocation) => {
+                        const xVehicle = showVehiclesOnMap ? activeVehicles.find((item: Vehicle) => item.xParking === 'Yes' && parkingRecordKey(item.currentLocationId) === parkingRecordKey(bay.id)) : undefined;
+                        const xVehicleRoadTest = xVehicle ? currentRoadTests.find((test: RoadTestRecord) => test.vehicleId === xVehicle.id) : undefined;
+                        return <button key={`x-parking-${bay.id}`} type="button" className="x-parking-space" disabled={!xVehicle} onClick={() => xVehicle && setOverviewVehicleId(xVehicle.id)} aria-label={`X Parking space in front of ${bay.zone}-${bay.bayNumber}${xVehicle ? `, vehicle ${xVehicle.plateNumber}` : ''}`}>
+                          {xVehicle && <TopViewCar vehicle={xVehicle} roadTest={xVehicleRoadTest} xParked />}
+                        </button>;
+                      })}
+                    </div>;
                     const renderBay = (bay: ParkingLocation, index: number) => {
                       const bayVehicles = showVehiclesOnMap ? activeVehicles.filter((item: Vehicle) => parkingRecordKey(item.currentLocationId) === parkingRecordKey(bay.id)) : [];
                       const vehicle = bayVehicles.find((item: Vehicle) => item.xParking !== 'Yes');
                       const xParkingVehicle = bayVehicles.find((item: Vehicle) => item.xParking === 'Yes');
-                      const displayVehicle = xParkingVehicle ?? vehicle;
+                      const displayVehicle = vehicle ?? xParkingVehicle;
                       const vehicleRoadTest = displayVehicle ? currentRoadTests.find((test: RoadTestRecord) => test.vehicleId === displayVehicle.id) : undefined;
                       const displayStatus: ParkingLocation['status'] = displayVehicle ? 'Occupied' : bay.status;
-                      return <motion.button id={displayVehicle ? `garage-vehicle-${displayVehicle.id}` : undefined} key={bay.id} type="button" draggable={Boolean(displayVehicle && canTransferVehicle)} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: Math.min(index, 12) * 0.025, ease: 'easeOut' as const }} onDragStart={() => displayVehicle && setDraggedVehicleId(displayVehicle.id)} onDragEnd={() => setDraggedVehicleId(undefined)} onDragOver={(event: React.DragEvent<HTMLButtonElement>) => event.preventDefault()} onDrop={() => { if (draggedVehicleId && displayStatus === 'Available') transferVehicle(draggedVehicleId, bay.id); setDraggedVehicleId(undefined); }} onClick={() => { if (displayVehicle) { setSelectedBayId(undefined); setOverviewVehicleId(displayVehicle.id); } else { setOverviewVehicleId(undefined); setSelectedBayId(bay.id); } }} className={`parking-space ${bayStyle(displayStatus)} ${xParkingVehicle ? 'x-parking-anchor' : ''} ${draggedVehicleId && displayStatus === 'Available' ? 'parking-drop-target' : ''} ${locatedVehicleId === displayVehicle?.id ? 'ring-4 ring-primary ring-offset-2' : ''}`} aria-label={`Bay ${bay.bayNumber}, ${zoneDisplayName(bay.zone)}, ${displayStatus}${vehicle ? `, vehicle ${vehicle.plateNumber}` : ''}${xParkingVehicle ? `, X-Parked vehicle ${xParkingVehicle.plateNumber}` : ''}`}>
+                      return <motion.button id={vehicle ? `garage-vehicle-${vehicle.id}` : undefined} key={bay.id} type="button" draggable={Boolean(vehicle && canTransferVehicle)} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: Math.min(index, 12) * 0.025, ease: 'easeOut' as const }} onDragStart={() => vehicle && setDraggedVehicleId(vehicle.id)} onDragEnd={() => setDraggedVehicleId(undefined)} onDragOver={(event: React.DragEvent<HTMLButtonElement>) => event.preventDefault()} onDrop={() => { if (draggedVehicleId && displayStatus === 'Available') transferVehicle(draggedVehicleId, bay.id); setDraggedVehicleId(undefined); }} onClick={() => { if (displayVehicle) { setSelectedBayId(undefined); setOverviewVehicleId(displayVehicle.id); } else { setOverviewVehicleId(undefined); setSelectedBayId(bay.id); } }} className={`parking-space ${bayStyle(displayStatus)} ${draggedVehicleId && displayStatus === 'Available' ? 'parking-drop-target' : ''} ${locatedVehicleId === displayVehicle?.id ? 'ring-4 ring-primary ring-offset-2' : ''}`} aria-label={`Bay ${bay.bayNumber}, ${zoneDisplayName(bay.zone)}, ${displayStatus}${vehicle ? `, vehicle ${vehicle.plateNumber}` : ''}${xParkingVehicle ? `, X-Parked vehicle ${xParkingVehicle.plateNumber}` : ''}`}>
                         <span className="absolute bottom-0.5 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap text-xs font-black">{bay.zone === 'Reception' ? 'R ' : bay.zone === 'Workshop' ? 'W ' : bay.zone}-{bay.bayNumber}</span>
-                        {vehicle && <TopViewCar vehicle={vehicle} roadTest={vehicle.id === displayVehicle?.id ? vehicleRoadTest : undefined} onSelect={() => { setSelectedBayId(undefined); setOverviewVehicleId(vehicle.id); }} />}
-                        {xParkingVehicle && <TopViewCar vehicle={xParkingVehicle} roadTest={xParkingVehicle.id === displayVehicle?.id ? vehicleRoadTest : undefined} xParked onSelect={() => { setSelectedBayId(undefined); setOverviewVehicleId(xParkingVehicle.id); }} />}
+                        {vehicle && <TopViewCar vehicle={vehicle} roadTest={vehicleRoadTest} onSelect={() => { setSelectedBayId(undefined); setOverviewVehicleId(vehicle.id); }} />}
                         {!displayVehicle && bay.status !== 'Available' && bay.status !== 'Occupied' && <Badge className="bay-status-label" variant={bay.status === 'Reserved' ? 'secondary' : 'outline'}>{bay.status}</Badge>}
                       </motion.button>;
                     };
@@ -805,9 +822,13 @@ function Dashboard({ locations, setLocations, movements, vehicles, setVehicles, 
                             : zoneItem.zone === 'Reception'
                               ? [0, 2, 4, 6].includes(laneIndex)
                               : false;
+                          const xParkingBays = laneBays.filter(supportsXParkingLocation);
+                          const xParkingSpacesAbove = zoneItem.zone === 'B' && xParkingBays.some((bay: ParkingLocation) => Number(bay.bayNumber) <= 69);
                           return <div key={`${zoneItem.zone}-${lane}`}>
                             <div className="mb-1 px-2 text-xs font-bold text-foreground">{lane}</div>
-                            <div className={`parking-row ${facesRoad ? 'parking-row-facing' : ''}`}>{laneBays.map(renderBay)}</div>
+                            {xParkingBays.length > 0 && xParkingSpacesAbove && <><div className="x-parking-row-label">X Parking spaces</div>{renderXParkingSpaces(xParkingBays)}</>}
+                            <div className={`parking-row ${facesRoad ? 'parking-row-facing' : ''} ${xParkingBays.length > 0 ? 'parking-row-x-enabled' : ''}`}>{laneBays.map(renderBay)}</div>
+                            {xParkingBays.length > 0 && !xParkingSpacesAbove && <><div className="x-parking-row-label">X Parking spaces</div>{renderXParkingSpaces(xParkingBays)}</>}
                             {hasNextLane && (usesPath
                               ? <div className={`parking-road parking-road-${laneBays[0]?.direction === 'Reverse' ? 'reverse' : 'forward'} my-2`} aria-label={`Pathway after ${lane}`} />
                               : <div className="parking-divider" aria-label={`Division between ${lane} and ${lanes[laneIndex + 1]} in ${zoneDisplayName(zoneItem.zone)}`} />)}
@@ -837,14 +858,14 @@ function Assignment({ assignmentVehicle, setAssignmentVehicle, zone, setZone, ba
   const selectedBay = locations.find((item: ParkingLocation) => item.id === bayId);
   const selectedOccupant = vehicles.find((item: Vehicle) => parkingRecordKey(item.currentLocationId) === parkingRecordKey(bayId));
   const selectedBayOccupied = Boolean(selectedOccupant);
-  const vacantBays = locations.filter((item: ParkingLocation) => item.status === 'Available' && !vehicles.some((vehicle: Vehicle) => parkingRecordKey(vehicle.currentLocationId) === parkingRecordKey(item.id)));
+  const vacantBays = locations.filter((item: ParkingLocation) => supportsXParkingLocation(item) && item.status === 'Available' && !vehicles.some((vehicle: Vehicle) => parkingRecordKey(vehicle.currentLocationId) === parkingRecordKey(item.id)));
   const suggestedBay = selectedBay ? [...vacantBays].filter((item: ParkingLocation) => item.id !== selectedBay.id).sort((left: ParkingLocation, right: ParkingLocation) => {
     const scopeRank = (item: ParkingLocation) => item.zone !== selectedBay.zone ? 3 : item.section !== selectedBay.section ? 2 : item.lane !== selectedBay.lane ? 1 : 0;
     const scopeDifference = scopeRank(left) - scopeRank(right);
     if (scopeDifference) return scopeDifference;
     return Math.abs(Number(left.bayNumber) - Number(selectedBay.bayNumber)) - Math.abs(Number(right.bayNumber) - Number(selectedBay.bayNumber));
   })[0] : undefined;
-  const baysForSelection = assignmentVehicle.xParking === 'Yes' ? locations : availableBays;
+  const baysForSelection = assignmentVehicle.xParking === 'Yes' ? locations.filter(supportsXParkingLocation) : availableBays;
   const parkHereBay = selectedBayOccupied ? suggestedBay ?? selectedBay : selectedBay;
   const openAssignment = () => {
     if (assignmentVehicle.xParking !== 'Yes') {
@@ -897,7 +918,7 @@ function Assignment({ assignmentVehicle, setAssignmentVehicle, zone, setZone, ba
             })}</SelectContent></Select></div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2"><Button size="lg" onClick={openAssignment}><CircleParking /> Assign vehicle</Button><Button size="lg" variant="outline" onClick={handleRelease}><X /> Release vehicle</Button></div>
-          <Button size="lg" variant="secondary" className="w-full" onClick={handleAssignUnassigned}><CircleParking /> Assign to Unassigned Bay</Button>
+          <Button size="lg" variant="secondary" className="w-full" onClick={handleAssignUnassigned} disabled={assignmentVehicle.xParking === 'Yes'}><CircleParking /> Assign to Unassigned Bay</Button>
           <p className="-mt-3 text-sm text-muted-foreground">No bay number is required. The vehicle will appear in the dashboard tray.</p>
         </CardContent>
       </Card>
@@ -1346,14 +1367,15 @@ function LayoutScreen({ locations, zoneFilter, setZoneFilter, zoneStats }: { loc
 
 function Transfer({ vehicles, locations, movements, selectedVehicleId, setSelectedVehicleId, selectedVehicle, newLocationId, setNewLocationId, notes, setNotes, handleTransfer, locationLabel }: { vehicles: Vehicle[]; locations: ParkingLocation[]; movements: Movement[]; selectedVehicleId: string; setSelectedVehicleId: (value: string) => void; selectedVehicle?: Vehicle; newLocationId: string; setNewLocationId: (value: string) => void; notes: string; setNotes: (value: string) => void; handleTransfer: () => void; locationLabel: (id?: string) => string }) {
   const [vehicleSearch, setVehicleSearch] = useState('');
-  const transferZones = Array.from(new Set(locations.filter((item: ParkingLocation) => item.status === 'Available').map((item: ParkingLocation) => item.zone))).sort();
+  const transferLocations = locations.filter((item: ParkingLocation) => item.status === 'Available' && (selectedVehicle?.xParking !== 'Yes' || supportsXParkingLocation(item)));
+  const transferZones = Array.from(new Set(transferLocations.map((item: ParkingLocation) => item.zone))).sort();
   const selectedDestination = locations.find((item: ParkingLocation) => item.id === newLocationId);
   const [transferZone, setTransferZone] = useState(selectedDestination?.zone ?? transferZones[0] ?? '');
-  const destinationBays = locations.filter((item: ParkingLocation) => item.status === 'Available' && item.zone === transferZone);
+  const destinationBays = transferLocations.filter((item: ParkingLocation) => item.zone === transferZone);
   const parkedVehicles = vehicles.filter((item: Vehicle) => item.id && item.currentLocationId && item.status !== 'Delivered');
   const normalizedSearch = vehicleSearch.trim().toLowerCase();
   const matchingVehicles = parkedVehicles.filter((item: Vehicle) => !normalizedSearch || item.plateNumber.toLowerCase().includes(normalizedSearch) || item.vehicleId.toLowerCase().includes(normalizedSearch));
-  return <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-5"><h2 className="text-2xl font-black lg:col-span-5">Transfer vehicle</h2><Card className="lg:col-span-5"><CardContent className="space-y-5 p-5"><div className="space-y-3"><Label htmlFor="transfer-vehicle-search">Search vehicle number</Label><div className="relative"><Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" aria-hidden="true" /><Input id="transfer-vehicle-search" value={vehicleSearch} onChange={(event: ChangeEvent<HTMLInputElement>) => setVehicleSearch(event.target.value)} placeholder="Enter registration number" className="h-12 pl-12" /></div><Label>Vehicle</Label><Select value={selectedVehicleId} onValueChange={(value: string) => { setSelectedVehicleId(value); setVehicleSearch(''); }}><SelectTrigger className="h-12"><SelectValue placeholder="Select parked vehicle" /></SelectTrigger><SelectContent>{matchingVehicles.filter((item: Vehicle) => item.id).map((item: Vehicle) => <SelectItem key={item.id} value={item.id}>{item.plateNumber} · {locationLabel(item.currentLocationId)}</SelectItem>)}</SelectContent></Select>{normalizedSearch && matchingVehicles.length === 0 && <p className="text-sm text-muted-foreground">No parked vehicle matches “{vehicleSearch}”.</p>}</div><div className="grid gap-4 sm:grid-cols-[1fr_auto_1fr]"><div className="rounded-lg bg-muted p-4 text-muted-foreground"><p className="text-sm">Current location</p><p className="text-xl font-bold text-foreground">{locationLabel(selectedVehicle?.currentLocationId)}</p></div><ChevronRight className="m-auto rotate-90 sm:rotate-0"/><div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><Label>Zone</Label><Select value={transferZone || 'none'} onValueChange={(value: string) => { setTransferZone(value === 'none' ? '' : value); setNewLocationId(''); }}><SelectTrigger className="h-14"><SelectValue placeholder="Choose zone" /></SelectTrigger><SelectContent><SelectItem value="none">Choose zone</SelectItem>{transferZones.filter((item: string) => item).map((item: string) => <SelectItem key={item} value={item}>Zone {item}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label>Bay number</Label><Select value={newLocationId || 'none'} onValueChange={(value: string) => setNewLocationId(value === 'none' ? '' : value)}><SelectTrigger className="h-14"><SelectValue placeholder="Choose bay" /></SelectTrigger><SelectContent><SelectItem value="none">Choose bay</SelectItem>{destinationBays.filter((item: ParkingLocation) => item.id).map((item: ParkingLocation) => <SelectItem key={item.id} value={item.id}>{item.bayNumber} · {item.section ?? 'Main'} / {item.lane}</SelectItem>)}</SelectContent></Select></div></div></div><div className="space-y-2"><Label htmlFor="notes">Transfer notes</Label><Textarea id="notes" value={notes} onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setNotes(event.target.value)} /></div><Button size="lg" className="w-full" onClick={handleTransfer}><MoveRight /> Transfer and notify</Button></CardContent></Card><Card className="lg:col-span-5"><CardHeader><CardTitle>Recent movements</CardTitle><CardDescription>Timestamped audit trail from the yard</CardDescription></CardHeader><CardContent className="space-y-3">{movements.slice(0, 5).map((movement: Movement) => { const vehicle = vehicles.find((item: Vehicle) => item.id === movement.vehicleId); return <div key={movement.id} className="flex items-center gap-3 border-b py-3 last:border-0"><div className="rounded-md bg-secondary p-2 text-secondary-foreground"><MoveRight /></div><div className="min-w-0 flex-1"><p className="font-semibold">{vehicle?.plateNumber} · {movement.movementType}</p><p className="truncate text-sm text-muted-foreground">{locationLabel(movement.fromLocationId)} → {locationLabel(movement.toLocationId)} · {movement.performedBy}</p></div><time className="text-xs text-muted-foreground">{format(new Date(movement.actionDateTime), 'HH:mm')}</time></div>; })}</CardContent></Card></div>;
+  return <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-5"><h2 className="text-2xl font-black lg:col-span-5">Transfer vehicle</h2><Card className="lg:col-span-5"><CardContent className="space-y-5 p-5"><div className="space-y-3"><Label htmlFor="transfer-vehicle-search">Search vehicle number</Label><div className="relative"><Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" aria-hidden="true" /><Input id="transfer-vehicle-search" value={vehicleSearch} onChange={(event: ChangeEvent<HTMLInputElement>) => setVehicleSearch(event.target.value)} placeholder="Enter registration number" className="h-12 pl-12" /></div><Label>Vehicle</Label><Select value={selectedVehicleId} onValueChange={(value: string) => { setSelectedVehicleId(value); setVehicleSearch(''); const nextVehicle = vehicles.find((item: Vehicle) => item.id === value); const nextLocations = locations.filter((item: ParkingLocation) => item.status === 'Available' && (nextVehicle?.xParking !== 'Yes' || supportsXParkingLocation(item))); if (!nextLocations.some((item: ParkingLocation) => item.zone === transferZone)) setTransferZone(nextLocations[0]?.zone ?? ''); setNewLocationId(''); }}><SelectTrigger className="h-12"><SelectValue placeholder="Select parked vehicle" /></SelectTrigger><SelectContent>{matchingVehicles.filter((item: Vehicle) => item.id).map((item: Vehicle) => <SelectItem key={item.id} value={item.id}>{item.plateNumber} · {locationLabel(item.currentLocationId)}</SelectItem>)}</SelectContent></Select>{normalizedSearch && matchingVehicles.length === 0 && <p className="text-sm text-muted-foreground">No parked vehicle matches “{vehicleSearch}”.</p>}</div><div className="grid gap-4 sm:grid-cols-[1fr_auto_1fr]"><div className="rounded-lg bg-muted p-4 text-muted-foreground"><p className="text-sm">Current location</p><p className="text-xl font-bold text-foreground">{locationLabel(selectedVehicle?.currentLocationId)}</p></div><ChevronRight className="m-auto rotate-90 sm:rotate-0"/><div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><Label>Zone</Label><Select value={transferZone || 'none'} onValueChange={(value: string) => { setTransferZone(value === 'none' ? '' : value); setNewLocationId(''); }}><SelectTrigger className="h-14"><SelectValue placeholder="Choose zone" /></SelectTrigger><SelectContent><SelectItem value="none">Choose zone</SelectItem>{transferZones.filter((item: string) => item).map((item: string) => <SelectItem key={item} value={item}>Zone {item}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label>Bay number</Label><Select value={newLocationId || 'none'} onValueChange={(value: string) => setNewLocationId(value === 'none' ? '' : value)}><SelectTrigger className="h-14"><SelectValue placeholder="Choose bay" /></SelectTrigger><SelectContent><SelectItem value="none">Choose bay</SelectItem>{destinationBays.filter((item: ParkingLocation) => item.id).map((item: ParkingLocation) => <SelectItem key={item.id} value={item.id}>{item.bayNumber} · {item.section ?? 'Main'} / {item.lane}</SelectItem>)}</SelectContent></Select></div></div></div><div className="space-y-2"><Label htmlFor="notes">Transfer notes</Label><Textarea id="notes" value={notes} onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setNotes(event.target.value)} /></div><Button size="lg" className="w-full" onClick={handleTransfer}><MoveRight /> Transfer and notify</Button></CardContent></Card><Card className="lg:col-span-5"><CardHeader><CardTitle>Recent movements</CardTitle><CardDescription>Timestamped audit trail from the yard</CardDescription></CardHeader><CardContent className="space-y-3">{movements.slice(0, 5).map((movement: Movement) => { const vehicle = vehicles.find((item: Vehicle) => item.id === movement.vehicleId); return <div key={movement.id} className="flex items-center gap-3 border-b py-3 last:border-0"><div className="rounded-md bg-secondary p-2 text-secondary-foreground"><MoveRight /></div><div className="min-w-0 flex-1"><p className="font-semibold">{vehicle?.plateNumber} · {movement.movementType}</p><p className="truncate text-sm text-muted-foreground">{locationLabel(movement.fromLocationId)} → {locationLabel(movement.toLocationId)} · {movement.performedBy}</p></div><time className="text-xs text-muted-foreground">{format(new Date(movement.actionDateTime), 'HH:mm')}</time></div>; })}</CardContent></Card></div>;
 }
 function HistoryScreen({ movements, auditEvents, vehicles, historyFilter, setHistoryFilter, locationLabel, canRecoverDeliveredVehicle, onRecoverDeliveredVehicle }: { movements: Movement[]; auditEvents: OfflineAuditEvent[]; vehicles: Vehicle[]; historyFilter: string; setHistoryFilter: (value: string) => void; locationLabel: (id?: string) => string; canRecoverDeliveredVehicle: boolean; onRecoverDeliveredVehicle: (vehicleId: string) => void }) {
   const vehicleEvents = auditEvents.filter((event: OfflineAuditEvent) => event.entity === 'Vehicle' || event.entity === 'Reservation');
