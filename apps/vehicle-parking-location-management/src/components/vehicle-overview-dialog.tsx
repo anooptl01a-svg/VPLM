@@ -44,6 +44,40 @@ const toFormData = (vehicle: Vehicle): VehicleFormData => ({
   plateNumber: vehicle.plateNumber, vin: vehicle.vin, brand: vehicle.brand, model: vehicle.model, color: vehicle.color, customerName: vehicle.customerName, driverOwner: vehicle.driverOwner, department: vehicle.department, xParking: vehicle.xParking ?? 'No',
 });
 
+const compressImage = async (file: File): Promise<string> => {
+  const image = await createImageBitmap(file);
+  try {
+    let scale = Math.min(1, 1280 / Math.max(image.width, image.height));
+    let smallest: Blob | undefined;
+    for (let resize = 0; resize < 5; resize += 1) {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Image compression is unavailable in this browser.');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      for (const quality of [0.55, 0.4, 0.3]) {
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
+        if (!blob) throw new Error('Unable to compress this image.');
+        if (!smallest || blob.size < smallest.size) smallest = blob;
+        if (blob.size <= 180 * 1024) return blobToDataUrl(blob);
+      }
+      scale *= 0.75;
+    }
+    if (!smallest) throw new Error('Unable to compress this image.');
+    return blobToDataUrl(smallest);
+  } finally {
+    image.close();
+  }
+};
+
+const blobToDataUrl = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Unable to read the compressed image.'));
+  reader.onerror = () => reject(new Error('Unable to read the compressed image.'));
+  reader.readAsDataURL(blob);
+});
+
 export function VehicleOverviewDialog(props: VehicleOverviewDialogProps) {
   const { vehicle, open, onOpenChange, locations, movements, roadTest } = props;
   const interactive = props.mode !== 'readonly' ? props : undefined;
@@ -75,9 +109,21 @@ export function VehicleOverviewDialog(props: VehicleOverviewDialogProps) {
     if (!interactive) return;
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => interactive.onUpdate(vehicle.id, { photoUrls: [...vehicle.photoUrls, String(reader.result)] }, 'Photo Upload');
-    reader.readAsDataURL(file);
+    if (!file.type.startsWith('image/')) {
+      toast.error('Choose an image file.');
+      event.target.value = '';
+      return;
+    }
+    void compressImage(file).then((photoUrl: string) => {
+      const uploadedAt = new Date().toISOString();
+      interactive.onUpdate(vehicle.id, {
+        photoUrls: [...vehicle.photoUrls, photoUrl],
+        photoUploadedAt: [...(vehicle.photoUploadedAt ?? vehicle.photoUrls.map(() => undefined)), uploadedAt],
+      }, 'Photo Upload');
+      toast.success('Compressed vehicle photo attached. It will be removed after 10 days.');
+    }).catch((error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Unable to attach this image.');
+    });
     event.target.value = '';
   };
   const action = (status: Vehicle['operationalStatus'], label: string) => {
@@ -103,7 +149,7 @@ export function VehicleOverviewDialog(props: VehicleOverviewDialogProps) {
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
       <div className="space-y-4"><div className="relative min-h-52 overflow-hidden rounded-2xl bg-muted">{vehicle.photoUrls[0] ? <img src={vehicle.photoUrls[0]} alt={`${vehicle.plateNumber} vehicle`} className="h-52 w-full object-cover" /> : <div className="grid h-52 place-items-center text-muted-foreground"><CarFront className="h-16 w-16" /></div>}<Badge className="absolute left-3 top-3">{vehicle.operationalStatus}</Badge></div>{interactive && <><input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={uploadPhoto} /><Button variant="outline" className="w-full" onClick={() => photoRef.current?.click()}><Camera /> Capture or upload photo</Button></>}
         <Tabs defaultValue="profile"><TabsList className="w-full"><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="history">Parking history</TabsTrigger><TabsTrigger value="gps">GPS map</TabsTrigger></TabsList>
-          <TabsContent value="profile" className="space-y-4">{isEditing && draft ? <div className="rounded-2xl border bg-card p-4 text-card-foreground"><VehicleFormFields value={draft} onChange={setDraft} idPrefix="profile" /></div> : <div className="grid gap-3 sm:grid-cols-2">{[['Vehicle ID', vehicle.vehicleId], ['Registration', vehicle.plateNumber], ['Make / Brand', vehicle.brand], ['Model', vehicle.model], ['Color', vehicle.color], ['VIN / Chassis', vehicle.vin], ['Customer', vehicle.customerName], ['Driver / Owner', vehicle.driverOwner], ['Department', vehicle.department], ['X Parking', vehicle.xParking ?? 'No'], ['Status', vehicle.status], ['Operational status', vehicle.operationalStatus], ['Assigned bay', location ? `${location.zone}-${location.bayNumber}` : vehicle.status === 'Assigned' ? 'Unassigned Bay' : 'Unassigned'], ['Assigned on', vehicle.assignedDate ? format(new Date(vehicle.assignedDate), 'dd MMM yyyy, HH:mm') : '—'], ['Assigned by', vehicle.assignedBy], ['Last movement', lastMovement ? `${lastMovement.movementType} · ${format(new Date(lastMovement.actionDateTime), 'dd MMM, HH:mm')}` : '—'], ['GPS position', vehicle.latitude !== undefined && vehicle.longitude !== undefined ? `${vehicle.latitude.toFixed(5)}, ${vehicle.longitude.toFixed(5)}` : 'GPS pending'], ['Geofence', vehicle.geofenceStatus]].map(([label, value]) => <div key={label} className="rounded-lg bg-muted p-3"><p className="text-xs font-bold text-muted-foreground">{label}</p><p className="font-semibold text-foreground">{value || '—'}</p></div>)}</div>}</TabsContent>
+          <TabsContent value="profile" className="space-y-4">{isEditing && draft ? <div className="rounded-2xl border bg-card p-4 text-card-foreground"><VehicleFormFields value={draft} onChange={setDraft} idPrefix="profile" /></div> : <div className="grid gap-3 sm:grid-cols-2">{[['Registration', vehicle.plateNumber], ['Make / Brand', vehicle.brand], ['Model', vehicle.model], ['Color', vehicle.color], ['VIN / Chassis', vehicle.vin], ['Customer', vehicle.customerName], ['Driver / Owner', vehicle.driverOwner], ['Department', vehicle.department], ['X Parking', vehicle.xParking ?? 'No'], ['Status', vehicle.status], ['Operational status', vehicle.operationalStatus], ['Assigned bay', location ? `${location.zone}-${location.bayNumber}` : vehicle.status === 'Assigned' ? 'Unassigned Bay' : 'Unassigned'], ['Assigned on', vehicle.assignedDate ? format(new Date(vehicle.assignedDate), 'dd MMM yyyy, HH:mm') : '—'], ['Assigned by', vehicle.assignedBy], ['Last movement', lastMovement ? `${lastMovement.movementType} · ${format(new Date(lastMovement.actionDateTime), 'dd MMM, HH:mm')}` : '—'], ['GPS position', vehicle.latitude !== undefined && vehicle.longitude !== undefined ? `${vehicle.latitude.toFixed(5)}, ${vehicle.longitude.toFixed(5)}` : 'GPS pending'], ['Geofence', vehicle.geofenceStatus]].map(([label, value]) => <div key={label} className="rounded-lg bg-muted p-3"><p className="text-xs font-bold text-muted-foreground">{label}</p><p className="font-semibold text-foreground">{value || '—'}</p></div>)}</div>}</TabsContent>
           <TabsContent value="history" className="space-y-2">{history.length ? history.map((item: Movement) => <div key={item.id} className="flex gap-3 border-b py-3"><History className="mt-1 h-4 w-4 shrink-0" /><div><p className="font-semibold">{item.movementType}: {locationLabel(item.fromLocationId, locations)} → {locationLabel(item.toLocationId, locations)}</p><p className="text-sm text-muted-foreground">{format(new Date(item.actionDateTime), 'dd MMM yyyy, HH:mm')} · {item.performedBy}</p>{item.notes && <p className="mt-1 text-sm">{item.notes}</p>}</div></div>) : <p className="py-4 text-sm text-muted-foreground">No movement history recorded.</p>}</TabsContent>
           <TabsContent value="gps"><div className="relative h-64 overflow-hidden rounded-2xl bg-muted"><div className="absolute inset-0 [background-image:linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] [background-size:28px_28px]" /><div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary p-3 text-primary-foreground shadow-xl"><MapPin /></div><div className="absolute bottom-3 left-3 rounded-lg bg-popover p-3 text-sm text-popover-foreground shadow"><strong>{vehicle.latitude?.toFixed(5) ?? 'GPS pending'}, {vehicle.longitude?.toFixed(5) ?? '—'}</strong><p>{vehicle.distanceToBayMeters ?? '—'} m from assigned bay · {vehicle.geofenceStatus}</p></div></div>{interactive && <Button className="mt-3 w-full" onClick={updateGps}><Navigation /> Update current location</Button>}</TabsContent>
         </Tabs>
