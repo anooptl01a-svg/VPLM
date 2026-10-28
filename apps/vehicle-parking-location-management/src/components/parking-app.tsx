@@ -793,7 +793,7 @@ function Dashboard({ locations, setLocations, movements, vehicles, setVehicles, 
             </div>
           </CardHeader>
           <CardContent>
-            <div className="parking-garage max-h-[620px] overflow-auto p-2">
+            <div className="parking-garage live-parking-garage max-h-[620px] overflow-auto p-2">
               <div className="min-w-[1480px]">
                   {visibleZones.map((zoneItem: { zone: string; total: number; available: number; percent: number; state: string }) => {
                     const rawZoneLocations = locations.filter((location: ParkingLocation) => location.zone === zoneItem.zone);
@@ -830,7 +830,7 @@ function Dashboard({ locations, setLocations, movements, vehicles, setVehicles, 
                         <span className="flex items-center gap-2"><ChevronDown className={`h-4 w-4 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} /><strong>{zoneDisplayName(zoneItem.zone)}</strong><span className="text-sm text-muted-foreground">{lanes.length} {lanes.length === 1 ? 'line' : 'lines'}</span></span>
                         <span className="text-xs font-semibold">{zoneLocations.length} shown · {zoneItem.available} vacant</span>
                       </button>
-                      {!isCollapsed && (zoneLocations.length > 0 ? <div className="rounded-xl border bg-muted p-3">
+                      {!isCollapsed && (zoneLocations.length > 0 ? <div className="live-parking-lane rounded-xl border bg-muted p-3">
                         {lanes.map((lane: string, laneIndex: number) => {
                           const laneBays = zoneLocations.filter((location: ParkingLocation) => location.lane.trim() === lane);
                           const facesRoad = laneIndex % 2 === 1;
