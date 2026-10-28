@@ -1,8 +1,14 @@
 create table if not exists public.workspace_members (
   user_id uuid primary key references auth.users (id) on delete cascade,
-  role text not null check (role in ('Administrator', 'Supervisor', 'TechnicalLeader', 'Operator')),
+  role text not null check (role in ('Administrator', 'Supervisor', 'TechnicalLeader', 'Operator', 'Drivers', 'Guest Users', 'Others')),
   created_at timestamptz not null default now()
 );
+
+alter table public.workspace_members
+  drop constraint if exists workspace_members_role_check;
+alter table public.workspace_members
+  add constraint workspace_members_role_check
+  check (role in ('Administrator', 'Supervisor', 'TechnicalLeader', 'Operator', 'Drivers', 'Guest Users', 'Others'));
 
 create table if not exists public.workspace_state (
   id smallint primary key check (id = 1),

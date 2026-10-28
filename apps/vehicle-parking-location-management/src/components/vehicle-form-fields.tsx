@@ -1,6 +1,7 @@
 import { type ChangeEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const toyotaColors = [
@@ -26,7 +27,7 @@ export const vehicleModels = [
   'Corolla Cross', 'Corolla Hatchback', 'Corolla Touring Sports', 'Crown', 'FJ Cruiser', 'Fortuner', 'GR Corolla',
   'GR Supra', 'GR Yaris', 'Grand Highlander', 'Hiace', 'Highlander', 'Hilux', 'Land Cruiser', 'Land Cruiser Prado',
   'Mirai', 'Prius', 'Proace', 'Raize', 'RAV4', 'Sequoia', 'Sienna', 'Tacoma', 'Tundra', 'Urban Cruiser',
-  'Veloz', 'Venza', 'Yaris', 'Yaris Cross',
+  'Veloz', 'Venza', 'Yaris', 'Yaris Cross', 'Other',
   'CT', 'ES', 'GS', 'GX', 'GX 550', 'HS', 'IS', 'LBX', 'LC', 'LC 500', 'LC 500h', 'LFA', 'LM', 'LM 350h',
   'LS', 'LS 500', 'LS 500h', 'LX', 'LX 600', 'NX', 'NX 250', 'NX 350', 'NX 350h', 'RC', 'RC F', 'RX',
   'RX 350', 'RX 350h', 'RX 500h', 'RZ', 'RZ 450e', 'SC', 'TX', 'TX 350', 'TX 500h', 'UX', 'UX 250h',
@@ -43,10 +44,11 @@ export interface VehicleFormData {
   customerName: string;
   driverOwner: string;
   department: string;
+  xParking: 'Yes' | 'No';
 }
 
 export const emptyVehicleForm: VehicleFormData = {
-  plateNumber: '', vin: '', brand: 'Toyota', model: '', color: 'Platinum White Pearl', customerName: '', driverOwner: '', department: '',
+  plateNumber: '', vin: '', brand: 'Toyota', model: 'Other', color: 'Platinum White Pearl', customerName: '', driverOwner: '', department: '', xParking: 'No',
 };
 
 export function vehicleColorClass(color?: string) {
@@ -79,6 +81,7 @@ export function VehicleFormFields({ value, onChange, idPrefix, assignmentMode = 
   return <div className="grid gap-4 sm:grid-cols-2">
     {fields.map((field: { key: keyof VehicleFormData; label: string; placeholder: string }) => <div key={field.key} className="space-y-2"><Label htmlFor={`${idPrefix}-${field.key}`}>{field.label}</Label><Input id={`${idPrefix}-${field.key}`} value={value[field.key]} onChange={(event: ChangeEvent<HTMLInputElement>) => update(field.key, field.key === 'plateNumber' ? event.target.value.toUpperCase() : event.target.value)} placeholder={field.placeholder} /></div>)}
     <div className="space-y-2 sm:col-span-2"><Label>Vehicle Model</Label><Select value={normalizedModel || 'none'} onValueChange={(selected: string) => update('model', selected === 'none' ? '' : selected)}><SelectTrigger className="h-12 rounded-full"><SelectValue placeholder="Select vehicle model" /></SelectTrigger><SelectContent><SelectItem value="none">Select vehicle model</SelectItem>{modelOptions.filter((model: string) => model).map((model: string) => <SelectItem key={model} value={model}>{model}</SelectItem>)}</SelectContent></Select></div>
+    {assignmentMode && <div className="space-y-3 sm:col-span-2"><Label>X Parking</Label><RadioGroup value={value.xParking} onValueChange={(selected: string) => update('xParking', selected)} className="flex gap-5">{(['Yes', 'No'] as const).map((option) => <Label key={option} htmlFor={`${idPrefix}-x-parking-${option.toLowerCase()}`} className="flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-3"><RadioGroupItem id={`${idPrefix}-x-parking-${option.toLowerCase()}`} value={option} />{option}</Label>)}</RadioGroup></div>}
     <div className="space-y-2 sm:col-span-2"><Label>Vehicle colour</Label><Select value={storedColor || 'none'} onValueChange={(selected: string) => update('color', selected === 'none' ? '' : selected)}><SelectTrigger className="h-12 rounded-full"><SelectValue placeholder="Select vehicle colour" /></SelectTrigger><SelectContent><SelectItem value="none">Select vehicle colour</SelectItem>{storedColor && !hasKnownColor && <SelectItem value={storedColor}><span className="flex items-center gap-3"><span className={`vehicle-color-swatch ${vehicleColorClass(storedColor)}`} aria-hidden="true" />{storedColor}</span></SelectItem>}{toyotaColors.filter((color: (typeof toyotaColors)[number]) => color.name).map((color: (typeof toyotaColors)[number]) => <SelectItem key={color.name} value={color.name}><span className="flex items-center gap-3"><span className={`vehicle-color-swatch ${color.className}`} aria-hidden="true" />{color.name}</span></SelectItem>)}</SelectContent></Select></div>
   </div>;
 }

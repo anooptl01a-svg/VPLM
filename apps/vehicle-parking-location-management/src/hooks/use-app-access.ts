@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export type AppRole = 'Administrator' | 'Supervisor' | 'TechnicalLeader' | 'Operator';
+export type AppRole = 'Administrator' | 'Supervisor' | 'TechnicalLeader' | 'Operator' | 'Drivers' | 'Guest Users' | 'Others';
 export type AccessFeature = 'Vehicles' | 'VehicleMovements' | 'ParkingLayout' | 'Reservations' | 'ApplicationSettings' | 'RolePermissions' | 'AuditLogs';
 export type AccessAction = 'View' | 'Create' | 'Edit' | 'Assign' | 'Transfer' | 'Release' | 'ManageSetting';
 
@@ -30,7 +30,7 @@ export const useAppAccess = (userPrincipalName: string | undefined, userObjectId
         .eq('user_id', userObjectId)
         .single();
       if (error) throw error;
-      if (!['Administrator', 'Supervisor', 'TechnicalLeader', 'Operator'].includes(data.role)) {
+      if (!['Administrator', 'Supervisor', 'TechnicalLeader', 'Operator', 'Drivers', 'Guest Users', 'Others'].includes(data.role)) {
         throw new Error('Workspace membership has an invalid role.');
       }
       const role = data.role as AppRole;

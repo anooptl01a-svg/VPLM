@@ -68,8 +68,8 @@ export function BayInformationDialog({ bay, open, onOpenChange, vehicle, reserva
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader><DialogTitle>Bay {bay.zone}-{bay.bayNumber}</DialogTitle><DialogDescription>Live bay information, actions, reservation workflow, and immutable history.</DialogDescription></DialogHeader>
-        <Tabs defaultValue="summary" className="space-y-4">
-          <TabsList className={`grid w-full ${bay.status === 'Available' ? 'grid-cols-4' : 'grid-cols-3'}`}><TabsTrigger value="summary">Summary</TabsTrigger>{bay.status === 'Available' && <TabsTrigger value="assignment">Assign vehicle</TabsTrigger>}<TabsTrigger value="actions">Actions</TabsTrigger><TabsTrigger value="history">History</TabsTrigger></TabsList>
+        <Tabs defaultValue={bay.status === 'Available' ? 'assignment' : 'summary'} className="space-y-4">
+          <TabsList className={`grid w-full ${bay.status === 'Available' ? 'grid-cols-4' : 'grid-cols-3'}`}>{bay.status === 'Available' && <TabsTrigger value="assignment">Assign vehicle</TabsTrigger>}<TabsTrigger value="summary">Summary</TabsTrigger><TabsTrigger value="actions">Actions</TabsTrigger><TabsTrigger value="history">History</TabsTrigger></TabsList>
           <TabsContent value="summary" className="space-y-4">
             <div className="grid gap-3 rounded-xl border bg-card p-4 text-card-foreground sm:grid-cols-3">
               <Info label="Bay number" value={`${bay.zone}-${bay.bayNumber}`} /><Info label="Zone" value={bay.zone} /><div><p className="text-sm text-muted-foreground">Status</p><Badge variant={bay.status === 'Occupied' ? 'destructive' : bay.status === 'Reserved' ? 'secondary' : 'outline'}>{displayStatus}</Badge></div>
