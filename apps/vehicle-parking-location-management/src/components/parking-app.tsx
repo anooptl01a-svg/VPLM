@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import {
   ArrowDown, ArrowUp, ArchiveRestore, Bell, BellOff, CalendarDays, Camera, CarFront, ChevronDown, ChevronRight, CircleParking,
   ClipboardList, Crosshair, Download, Fuel, Gauge, GripVertical, History, Home, LayoutGrid, MapPin, Menu, Minus, MoveRight,
-  Plus, QrCode, Route, Save, ScanLine, Search, Settings, ShieldCheck, SlidersHorizontal, Trash2, Upload, UserCog, UserRound, Wifi, WifiOff, X, Lightbulb, LightbulbOff, LogOut, DoorOpen,
+  KeyRound, Plus, QrCode, Route, Save, ScanLine, Search, Settings, ShieldCheck, SlidersHorizontal, Trash2, Upload, UserCog, UserRound, Wifi, WifiOff, X, Lightbulb, LightbulbOff, LogOut, DoorOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser } from '@/hooks/use-user';
@@ -28,6 +28,7 @@ import { loadOfflineState, pruneExpiredAuditEventPhotos, pruneExpiredMovementPho
 import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
 import { validateVehicle } from '@/lib/vehicle-validation';
 import { enqueueSync } from '@/lib/sync-queue';
+import { getAppAuthRedirectUrl, isDemoMode, supabase } from '@/lib/supabase';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,22 @@ const appRoles: Role[] = ['Administrator', 'Supervisor', 'TechnicalLeader', 'Ope
 const roleRank: Record<Role, number> = { Operator: 1, Drivers: 1, 'Guest Users': 1, Others: 1, TechnicalLeader: 2, Supervisor: 3, Administrator: 4 };
 const roleLabel = (role: Role) => role === 'TechnicalLeader' ? 'Technical Leader' : role;
 const rolesWithoutRoadTests: Role[] = ['Drivers', 'Guest Users', 'Others'];
+type ManagedUser = { id: string; name: string; email: string; role: Role };
+type UserAdminResponse = { users?: ManagedUser[]; invited?: boolean };
+
+const invokeUserAdmin = async (body: Record<string, unknown>): Promise<UserAdminResponse> => {
+  if (!supabase) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase.functions.invoke<UserAdminResponse>('admin-users', { body });
+  if (error) {
+    if (error.context instanceof Response) {
+      const responseBody = await error.context.clone().json().catch(() => null) as { error?: string } | null;
+      throw new Error(responseBody?.error ?? error.message);
+    }
+    throw error;
+  }
+  if (!data) throw new Error('The user-management service returned no response.');
+  return data;
+};
 
 const statusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
   if (status === 'Available' || status === 'Active' || status === 'Assigned') return 'default';
@@ -490,6 +507,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
               <Input value={searchQuery} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearchQuery(event.target.value)} onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && searchQuery.trim()) setScreen('search'); }} onFocus={() => { if (searchQuery.trim()) setScreen('search'); }} placeholder="Search plate or VIN" className="relative z-[1] h-11 rounded-2xl bg-transparent pl-10 pr-28" aria-label="Global vehicle search" />
             </div>
             <div className="ml-auto flex items-center gap-2">
+              {isDemoMode && <Badge variant="secondary" className="shrink-0 border border-amber-500/60 bg-amber-100 font-black text-amber-950">DEMO · ISOLATED</Badge>}
               <div className="hidden text-right xl:block"><p className="text-sm font-semibold">{format(currentTime, 'EEE, d MMM')}</p><p className="text-xs text-muted-foreground">{format(currentTime, 'HH:mm:ss')}</p></div>
               <Button variant={isOnline && syncState !== 'error' ? 'default' : 'secondary'} size="sm" className="rounded-xl" onClick={() => void sync(true)} aria-label={`Data storage status: ${syncLabel}`} title={lastSyncAt ? `Last synced ${new Date(lastSyncAt).toLocaleString()}` : 'Click to sync workspace data'}><span className="live-dot" /><span className="hidden lg:inline">{syncLabel}</span></Button>
               <Button variant="outline" size="icon" className="rounded-xl" onClick={handleNotificationClick} onDoubleClick={(event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault()} aria-label={`Notifications. Sound ${soundEnabled ? 'on' : 'off'}. Double-click to toggle sound.`} title={`Notification sound ${soundEnabled ? 'on' : 'off'} · double-click to toggle`}>{soundEnabled ? <Bell /> : <BellOff />}</Button>
@@ -526,7 +544,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
           {screen === 'transfer' && <Transfer vehicles={vehicles} locations={locations} movements={movements} selectedVehicleId={selectedVehicleId} setSelectedVehicleId={setSelectedVehicleId} selectedVehicle={selectedVehicle} newLocationId={newLocationId} setNewLocationId={setNewLocationId} notes={notes} setNotes={setNotes} handleTransfer={handleTransfer} locationLabel={locationLabel} />}
           {screen === 'history' && <HistoryScreen movements={movements} auditEvents={auditEvents} vehicles={vehicles} historyFilter={historyFilter} setHistoryFilter={setHistoryFilter} locationLabel={locationLabel} canRecoverDeliveredVehicle={canRecoverDeliveredVehicle} onRecoverDeliveredVehicle={recoverDeliveredVehicle} />}
           {screen === 'reservations' && <ReservationsScreen reservations={reservations} vehicles={vehicles} locations={locations} selectedVehicleId={selectedVehicleId} setSelectedVehicleId={setSelectedVehicleId} newLocationId={newLocationId} setNewLocationId={setNewLocationId} handleReserve={handleReserve} cancel={(id: string) => { const reservation = reservations.find((item: Reservation) => item.id === id); if (!reservation) return; setReservations((current: Reservation[]) => current.map((item: Reservation) => item.id === id ? { ...item, status: 'Cancelled' } : item)); logAudit('Cancel', 'Reservation', reservation.reservationId); toast.success('Reservation cancelled.'); }} locationLabel={locationLabel} />}
-          {screen === 'management' && canManage && <ManagementScreen role={role} locations={locations} setLocations={setLocations} vehicles={vehicles} setVehicles={setVehicles} movements={movements} auditEvents={auditEvents} setAuditEvents={setAuditEvents} logAudit={logAudit} actor={actor} actorId={queueOwnerId} garageLayout={garageLayout} setGarageLayout={setGarageLayout} sync={sync} />}
+          {screen === 'management' && canManage && <ManagementScreen role={role} locations={locations} setLocations={setLocations} vehicles={vehicles} setVehicles={setVehicles} movements={movements} auditEvents={auditEvents} setAuditEvents={setAuditEvents} logAudit={logAudit} actorId={queueOwnerId} garageLayout={garageLayout} setGarageLayout={setGarageLayout} />}
           {screen === 'settings' && isAdministrator && <SettingsScreen logAudit={logAudit} />}
           {screen === 'profile' && <Profile actor={actor} email={user?.userPrincipalName ?? 'local profile'} role={role} movements={movements} reservations={reservations} />}
         </motion.div>
@@ -949,14 +967,15 @@ function Assignment({ assignmentVehicle, setAssignmentVehicle, zone, setZone, ba
 
 type AuditEvent = { id: string; action: string; entity: string; detail: string; actor: string; timestamp: string; archived?: boolean };
 
-function ManagementScreen({ role, locations, setLocations, vehicles, setVehicles, movements, auditEvents, setAuditEvents, logAudit, actor, actorId, garageLayout, setGarageLayout, sync }: { role: Role; locations: ParkingLocation[]; setLocations: React.Dispatch<React.SetStateAction<ParkingLocation[]>>; vehicles: Vehicle[]; setVehicles: React.Dispatch<React.SetStateAction<Vehicle[]>>; movements: Movement[]; auditEvents: AuditEvent[]; setAuditEvents: React.Dispatch<React.SetStateAction<AuditEvent[]>>; logAudit: (action: string, entity: string, detail: string) => void; actor: string; actorId: string; garageLayout: GarageLayoutItem[]; setGarageLayout: React.Dispatch<React.SetStateAction<GarageLayoutItem[]>>; sync: (announce?: boolean) => Promise<boolean> }) {
+function ManagementScreen({ role, locations, setLocations, vehicles, setVehicles, movements, auditEvents, setAuditEvents, logAudit, actorId, garageLayout, setGarageLayout }: { role: Role; locations: ParkingLocation[]; setLocations: React.Dispatch<React.SetStateAction<ParkingLocation[]>>; vehicles: Vehicle[]; setVehicles: React.Dispatch<React.SetStateAction<Vehicle[]>>; movements: Movement[]; auditEvents: AuditEvent[]; setAuditEvents: React.Dispatch<React.SetStateAction<AuditEvent[]>>; logAudit: (action: string, entity: string, detail: string) => void; actorId: string; garageLayout: GarageLayoutItem[]; setGarageLayout: React.Dispatch<React.SetStateAction<GarageLayoutItem[]>> }) {
   const [draggedBay, setDraggedBay] = useState<string>();
   const [layoutZone, setLayoutZone] = useState('A');
   const [draggedLayoutItemId, setDraggedLayoutItemId] = useState<string>();
   const [pendingAi, setPendingAi] = useState<{ id: string; plate: string; bay: string; confidence: number }[]>([]);
-  const [users, setUsers] = useState<{ id: string; name: string; email: string; role: Role }[]>(() => {
-    try { return JSON.parse(window.localStorage.getItem(`vplm-management-users:${actor}`) ?? 'null') ?? [    { id: 'local-user', name: actor, email: 'local@device', role }]; } catch { return []; }
-  });
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState('');
+  const [usersBusyId, setUsersBusyId] = useState<string>();
   const existingZoneCodes = useMemo(() => Array.from(new Set([...locations.map((item: ParkingLocation) => item.zone), ...garageLayout.map((item: GarageLayoutItem) => item.zone)])).filter(Boolean).sort(), [locations, garageLayout]);
   const [zoneNameDraft, setZoneNameDraft] = useState('Zone A');
   const [zoneDetailsDraft, setZoneDetailsDraft] = useState('');
@@ -988,6 +1007,22 @@ function ManagementScreen({ role, locations, setLocations, vehicles, setVehicles
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<Role>('Operator');
+  const loadManagedUsers = useCallback(async () => {
+    setUsersLoading(true);
+    setUsersError('');
+    try {
+      const response = await invokeUserAdmin({ action: 'list' });
+      setUsers(response.users ?? []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load workspace users.';
+      setUsersError(message);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    if (role === 'Administrator') void loadManagedUsers();
+  }, [loadManagedUsers, role]);
   useEffect(() => {
     const zoneItem = garageLayout.find((item: GarageLayoutItem) => item.zone === layoutZone && item.kind === 'zone');
     setZoneNameDraft(zoneItem?.name ?? `Zone ${layoutZone}`);
@@ -1110,22 +1145,61 @@ function ManagementScreen({ role, locations, setLocations, vehicles, setVehicles
     const email = newUserEmail.trim().toLowerCase();
     if (!name || !email) return toast.error('Enter the user name and email address.');
     if (!email.includes('@')) return toast.error('Enter a valid email address.');
-    if (users.some((item: { email: string }) => item.email.toLowerCase() === email)) return toast.error('This user already exists.');
-    const next = { id: `u-${crypto.randomUUID()}`, name, email, role: newUserRole };
-    setUsers((current) => [...current, next]);
-    enqueueSync({ id: crypto.randomUUID(), ownerId: actorId, entity: 'ApplicationUser', action: 'create', recordId: next.id, payload: { name, email, role: newUserRole }, version: 1, createdAt: new Date().toISOString() });
-    logAudit('Create', 'User', `${email} · ${newUserRole}`);
-    setNewUserName(''); setNewUserEmail(''); setNewUserRole('Operator'); setShowAddUser(false);
-    toast.success(`${name} added as ${newUserRole} on this device.`);
-
-    void sync(false);
+    setUsersBusyId('new-user');
+    void invokeUserAdmin({ action: 'invite', name, email, role: newUserRole, redirectTo: getAppAuthRedirectUrl() }).then(async (response) => {
+      await loadManagedUsers();
+      logAudit('Create', 'User', `${email} · ${newUserRole}`);
+      setNewUserName(''); setNewUserEmail(''); setNewUserRole('Operator'); setShowAddUser(false);
+      toast.success(response.invited ? `Invitation sent to ${email}.` : `${name} added to the workspace.`);
+    }).catch((error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Unable to add this user.');
+    }).finally(() => setUsersBusyId(undefined));
+  };
+  const updateManagedUserRole = async (user: ManagedUser, nextRole: Role) => {
+    setUsersBusyId(user.id);
+    try {
+      await invokeUserAdmin({ action: 'update-role', userId: user.id, role: nextRole });
+      setUsers((current) => current.map((item) => item.id === user.id ? { ...item, role: nextRole } : item));
+      logAudit('Role', 'User', `${user.email} → ${roleLabel(nextRole)}`);
+      toast.success(`${user.name}'s role updated.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update this user role.');
+    } finally {
+      setUsersBusyId(undefined);
+    }
+  };
+  const sendPasswordReset = async (user: ManagedUser) => {
+    setUsersBusyId(user.id);
+    try {
+      await invokeUserAdmin({ action: 'reset-password', userId: user.id, redirectTo: getAppAuthRedirectUrl() });
+      logAudit('Reset password', 'User', user.email);
+      toast.success(`Password reset email sent to ${user.email}.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to send a password reset email.');
+    } finally {
+      setUsersBusyId(undefined);
+    }
+  };
+  const removeManagedUser = async (user: ManagedUser) => {
+    if (user.id === actorId) return toast.error('You cannot remove your own administrator account.');
+    if (!window.confirm(`Remove ${user.name} (${user.email}) from this application? This deletes their sign-in account and access.`)) return;
+    setUsersBusyId(user.id);
+    try {
+      await invokeUserAdmin({ action: 'remove', userId: user.id });
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+      logAudit('Remove', 'User', user.email);
+      toast.success(`${user.name} removed.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to remove this user.');
+    } finally {
+      setUsersBusyId(undefined);
+    }
   };
   const reorderBay = (targetId: string) => { if (!draggedBay || draggedBay === targetId) return; setLocations((current: ParkingLocation[]) => { const sourceIndex = current.findIndex((item: ParkingLocation) => item.id === draggedBay); const targetIndex = current.findIndex((item: ParkingLocation) => item.id === targetId); const next = [...current]; const [source] = next.splice(sourceIndex, 1); if (source) next.splice(targetIndex, 0, source); return next; }); logAudit('Layout', 'Parking map', `Reordered bay near ${targetId}`); setDraggedBay(undefined); };
   const reviewAi = (id: string, approved: boolean) => { const match = pendingAi.find((item: { id: string }) => item.id === id); if (!match) return; setPendingAi((current) => current.filter((item: { id: string }) => item.id !== id)); logAudit(approved ? 'Approval' : 'Rejection', 'AI match', `${match.plate} → ${match.bay}`); toast.success(`AI assignment ${approved ? 'approved' : 'rejected'}.`); };
   const saveManagementChanges = () => {
-    window.localStorage.setItem(`vplm-management-users:${actor}`, JSON.stringify(users));
     window.localStorage.setItem('vplm-garage-layout-v1', JSON.stringify(garageLayout));
-    logAudit('Save', 'Management center', `${locations.length} bays, ${vehicles.length} vehicles, ${garageLayout.length} layout items, and ${users.length} users`);
+    logAudit('Save', 'Management center', `${locations.length} bays, ${vehicles.length} vehicles, and ${garageLayout.length} layout items`);
     toast.success('Garage layout and management changes saved on this device.');
   };
   return <div className="mx-auto max-w-7xl space-y-5"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="technical-label">Role-secured operations</p><h2 className="text-2xl font-black">Management center</h2><p className="text-muted-foreground">{roleLabel(role)} access · all changes are written to the audit trail.</p></div><Button size="lg" onClick={saveManagementChanges}><Save /> Save changes</Button></div><Tabs defaultValue="bays" className="space-y-4"><TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4 lg:grid-cols-7"><TabsTrigger value="bays">Bays</TabsTrigger><TabsTrigger value="vehicles">Vehicles</TabsTrigger><TabsTrigger value="ai">AI review</TabsTrigger><TabsTrigger value="history">History</TabsTrigger><TabsTrigger value="approvals">Access approvals</TabsTrigger>{role === 'Administrator' && <TabsTrigger value="users">Users</TabsTrigger>}{role === 'Administrator' && <TabsTrigger value="recycle">Recycle</TabsTrigger>}</TabsList>
@@ -1229,11 +1303,14 @@ function ManagementScreen({ role, locations, setLocations, vehicles, setVehicles
       </DialogContent>
     </Dialog>
   <TabsContent value="history" className="space-y-3"><div className="grid gap-3 sm:grid-cols-3"><Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Movements</p><p className="text-3xl font-bold">{movements.length}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Audit events</p><p className="text-3xl font-bold">{auditEvents.length}</p></CardContent></Card></div>{auditEvents.map((event: AuditEvent) => <Card key={event.id}><CardContent className="flex items-center gap-3 p-4"><History/><div className="flex-1"><p className="font-semibold">{event.action} · {event.entity}</p><p className="text-sm text-muted-foreground">{event.detail} · {event.actor}</p></div><time className="text-xs text-muted-foreground">{format(new Date(event.timestamp), 'dd MMM, HH:mm')}</time></CardContent></Card>)}</TabsContent>
-  <TabsContent value="users" className="space-y-3">
-    <div className="flex justify-end"><Button onClick={() => setShowAddUser((current: boolean) => !current)}><Plus/>{showAddUser ? 'Cancel' : 'Add user'}</Button></div>
-    {showAddUser && <Card><CardHeader><CardTitle>Add user and role</CardTitle><CardDescription>Create an application user and assign their initial access role.</CardDescription></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div className="space-y-2"><Label htmlFor="new-user-name">Full name</Label><Input id="new-user-name" value={newUserName} onChange={(event: ChangeEvent<HTMLInputElement>) => setNewUserName(event.target.value)} placeholder="Enter full name" /></div><div className="space-y-2"><Label htmlFor="new-user-email">Email</Label><Input id="new-user-email" type="email" value={newUserEmail} onChange={(event: ChangeEvent<HTMLInputElement>) => setNewUserEmail(event.target.value)} placeholder="name@example.com" /></div><div className="space-y-2"><Label>Role</Label><Select value={newUserRole} onValueChange={(value: Role) => setNewUserRole(value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{appRoles.map((item: Role) => <SelectItem key={item} value={item}>{roleLabel(item)}</SelectItem>)}</SelectContent></Select></div><Button className="self-end" onClick={addUser}><Plus/>Create user</Button></CardContent></Card>}
-    {users.map((appUser: { id: string; name: string; email: string; role: Role }) => <Card key={appUser.id}><CardContent className="flex flex-wrap items-center gap-3 p-4"><UserRound/><div className="min-w-52 flex-1"><p className="font-bold">{appUser.name}</p><p className="text-sm text-muted-foreground">{appUser.email}</p></div><Select value={appUser.role} onValueChange={(value: Role) => { setUsers((current) => current.map((item: { id: string; name: string; email: string; role: Role }) => item.id === appUser.id ? { ...item, role: value } : item)); enqueueSync({ id: crypto.randomUUID(), ownerId: actorId, entity: 'ApplicationUser', action: 'update', recordId: appUser.id, payload: { role: value }, version: 1, createdAt: new Date().toISOString() }); logAudit('Role', 'User', `${appUser.email} → ${roleLabel(value)}`); toast.success(`${appUser.name}'s role update queued.`); void sync(false); }}><SelectTrigger className="w-44"><SelectValue/></SelectTrigger><SelectContent>{appRoles.map((item: Role) => <SelectItem key={item} value={item}>{roleLabel(item)}</SelectItem>)}</SelectContent></Select></CardContent></Card>)}
-  </TabsContent>
+  {role === 'Administrator' && <TabsContent value="users" className="space-y-3">
+    <div className="flex justify-end"><Button disabled={usersBusyId === 'new-user'} onClick={() => setShowAddUser((current: boolean) => !current)}><Plus/>{showAddUser ? 'Cancel' : 'Add user'}</Button></div>
+    {showAddUser && <Card><CardHeader><CardTitle>Invite user and assign role</CardTitle><CardDescription>New accounts receive an invitation email. Existing accounts are added to this workspace.</CardDescription></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div className="space-y-2"><Label htmlFor="new-user-name">Full name</Label><Input id="new-user-name" required value={newUserName} onChange={(event: ChangeEvent<HTMLInputElement>) => setNewUserName(event.target.value)} placeholder="Enter full name" /></div><div className="space-y-2"><Label htmlFor="new-user-email">Email</Label><Input id="new-user-email" type="email" required value={newUserEmail} onChange={(event: ChangeEvent<HTMLInputElement>) => setNewUserEmail(event.target.value)} placeholder="name@example.com" /></div><div className="space-y-2"><Label>Role</Label><Select value={newUserRole} onValueChange={(value: Role) => setNewUserRole(value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{appRoles.map((item: Role) => <SelectItem key={item} value={item}>{roleLabel(item)}</SelectItem>)}</SelectContent></Select></div><Button className="self-end" disabled={usersBusyId === 'new-user'} onClick={addUser}><Plus/>{usersBusyId === 'new-user' ? 'Sending…' : 'Send invitation'}</Button></CardContent></Card>}
+    {usersError && <p className="text-sm text-destructive" role="alert">{usersError}</p>}
+    {usersLoading ? <Card><CardContent className="p-5 text-sm text-muted-foreground">Loading workspace users…</CardContent></Card>
+      : users.length === 0 ? <Card><CardContent className="p-5 text-sm text-muted-foreground">No managed users were found.</CardContent></Card>
+        : users.map((appUser) => <Card key={appUser.id}><CardContent className="flex flex-wrap items-center gap-3 p-4"><UserRound/><div className="min-w-52 flex-1"><p className="font-bold">{appUser.name}</p><p className="text-sm text-muted-foreground">{appUser.email}</p></div><Select value={appUser.role} disabled={usersBusyId === appUser.id} onValueChange={(value: Role) => void updateManagedUserRole(appUser, value)}><SelectTrigger className="w-44"><SelectValue/></SelectTrigger><SelectContent>{appRoles.map((item: Role) => <SelectItem key={item} value={item}>{roleLabel(item)}</SelectItem>)}</SelectContent></Select><Button variant="outline" disabled={usersBusyId === appUser.id} onClick={() => void sendPasswordReset(appUser)}><KeyRound/>Reset password</Button><Button variant="destructive" disabled={usersBusyId === appUser.id || appUser.id === actorId} onClick={() => void removeManagedUser(appUser)}><Trash2/>Remove</Button></CardContent></Card>)}
+  </TabsContent>}
   <TabsContent value="recycle" className="space-y-3">{auditEvents.filter((event: AuditEvent) => event.action === 'Archive').map((event: AuditEvent) => <Card key={event.id}><CardContent className="flex items-center gap-3 p-4"><ArchiveRestore/><div className="flex-1"><p className="font-bold">{event.entity}</p><p className="text-sm text-muted-foreground">{event.detail}</p></div><Button variant="outline" onClick={() => { setAuditEvents((current) => current.map((item: AuditEvent) => item.id === event.id ? { ...item, action: 'Restore' } : item)); logAudit('Restore', event.entity, event.detail); toast.success('Item restored.'); }}><ArchiveRestore/>Restore</Button></CardContent></Card>)}</TabsContent></Tabs></div>;
 }
 
