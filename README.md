@@ -1,12 +1,12 @@
-Vehicle Parking Location Management & TL Road Test Tracking Dashboard
+**Vehicle Parking Location Management & TL Road Test Tracking Dashboard**
 
 This page is a centralized operational dashboard designed for Technical Leaders, Technicians, and Drivers to efficiently manage vehicle parking locations, monitor yard occupancy, and track road test activities in real time.
 
-Live Dashboard
+__**Live Dashboard**__
 
 Provides a real-time overview of all vehicle movements, parking utilization, and road test activities across the facility. The dashboard displays key operational metrics, alerts, and vehicle statuses to support faster decision-making.
 
-Live Yard Overview
+__**Live Yard Overview**___
 
 An interactive facility map showing all parking zones and vehicle locations. Users can:
 
@@ -16,7 +16,7 @@ Filter vehicles by status, assigned person, parking zone, or road test stage.
 Quickly locate vehicles within the yard.
 Parking Operations
 
-Manage daily parking activities through a streamlined workflow:
+**Manage daily parking activities through a streamlined workflow:**
 
 Fast vehicle check-in and bay allocation.
 Track vehicle arrivals, departures, and transfers.
@@ -24,7 +24,7 @@ Monitor parking availability across all zones.
 Optimize space utilization and vehicle flow.
 Parking Utilization Monitoring
 
-Provides live visibility of parking capacity:
+**Provides live visibility of parking capacity:**
 
 Real-time occupied and available bay count.
 Occupancy percentage by zone and facility.
@@ -32,24 +32,24 @@ Capacity trend analysis.
 Operational warning notifications when yard occupancy exceeds 80%, helping teams prevent congestion and maintain efficient operations.
 Fast Check-In
 
-Enables rapid vehicle registration upon arrival:
+**Enables rapid vehicle registration upon arrival:**
 
 Quick vehicle entry process.
 Automatic parking bay assignment.
 Immediate visibility on the yard map.
 Vehicle Assignment
 
-Assign vehicles to:
+**Assign vehicles to:**
 
 Technicians
 Technical Leaders
 Drivers
 
-Assignments are tracked and updated in real time, ensuring accountability and clear ownership.
+**Assignments are tracked and updated in real time, ensuring accountability and clear ownership.**
 
 Vehicle Profile
 
-A complete digital record for every vehicle, including:
+**A complete digital record for every vehicle, including:**
 
 Registration Number
 VIN
@@ -58,11 +58,11 @@ Current Parking Location
 Assigned Personnel
 Service Status
 
-The system validates Registration and VIN information to prevent duplicate vehicle records.
-
+****The system validates Registration and VIN information to prevent duplicate vehicle records.
+****
 Find a Vehicle
 
-Instant vehicle search capability using:
+**Instant vehicle search capability using:**
 
 Registration Number
 VIN
@@ -70,7 +70,7 @@ RO Number
 Assigned Technician
 Current Parking Zone
 
-Search results display the exact parking location and vehicle status.
+**Search results display the exact parking location and vehicle status.**
 
 Transfer Vehicle
 
@@ -78,7 +78,7 @@ Allows authorized users to move vehicles between bays or zones while maintaining
 
 Parking History
 
-Maintains a comprehensive history of:
+**Maintains a comprehensive history of:**
 
 Parking locations
 Vehicle transfers
@@ -87,7 +87,7 @@ Check-in and check-out activities
 User actions and timestamps
 Technical Leader Workspace
 
-A dedicated workspace for Technical Leaders to:
+**A dedicated workspace for Technical Leaders to:**
 
 Monitor assigned vehicles.
 Manage technician workloads.
@@ -105,7 +105,7 @@ Record completion details.
 Track vehicle availability during testing.
 Road Test Process Graphs
 
-Visual analytics and performance tracking including:
+**Visual analytics and performance tracking including:**
 
 Active road tests.
 Completed road tests.
