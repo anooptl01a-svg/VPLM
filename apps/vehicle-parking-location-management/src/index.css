@@ -364,7 +364,7 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
   .x-parking-space:hover .x-parked-car { transform: translate(-50%, -50%) rotate(90deg) scale(1.04); }
 
   .parking-row-facing .parking-space {
-    border-top: 3px solid var(--card);
+    border-top: 3px solid transparent;
     border-bottom: 0;
   }
 
@@ -372,8 +372,8 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
     position: relative;
     min-height: 6.5rem;
     border: 0;
-    border-inline: 2px solid var(--card);
-    border-bottom: 3px solid var(--card);
+    border-inline: 2px solid transparent;
+    border-bottom: 3px solid transparent;
     background: transparent;
     color: var(--foreground);
     transition: background-color 180ms ease, filter 180ms ease;
