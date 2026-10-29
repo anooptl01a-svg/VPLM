@@ -859,7 +859,6 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
   .bay-status-label { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
   .accommodation-parking-space .bay-number-label { transform: translateX(-50%); }
   .accommodation-parking-space .bay-status-label { transform: translate(-50%, -50%); }
-  .parking-drop-target { outline: 3px solid var(--accent); outline-offset: 3px; animation: target-pulse 1s ease-in-out infinite alternate; }
   .bay-map-space .top-view-car, .accommodation-parking-space .top-view-car { top: 57%; width: 2.55rem; height: 4.45rem; transform: translate(-50%, -50%); transition: transform 220ms ease; }
   .bay-map-space:hover .top-view-car, .accommodation-parking-space:hover .top-view-car { transform: translate(-50%, -53%) scale(1.04); }
   .bay-map-space .x-parked-car { top: -1rem; width: 2.55rem; height: 4.45rem; z-index: 15; transform: translate(-50%, -50%) rotate(90deg); }
