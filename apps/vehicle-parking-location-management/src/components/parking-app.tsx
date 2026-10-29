@@ -29,6 +29,7 @@ import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
 import { validateVehicle } from '@/lib/vehicle-validation';
 import { enqueueSync } from '@/lib/sync-queue';
 import { getAppAuthRedirectUrl, isDemoMode, supabase } from '@/lib/supabase';
+import { appStorageKey } from '@/lib/local-storage-scope';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,7 @@ const defaultGarageLayout: GarageLayoutItem[] = [
 
 const loadGarageLayout = (): GarageLayoutItem[] => {
   try {
-    const saved = window.localStorage.getItem('vplm-garage-layout-v1');
+    const saved = window.localStorage.getItem(appStorageKey('vplm-garage-layout-v1'));
     if (!saved) return defaultGarageLayout;
     const parsed = JSON.parse(saved) as GarageLayoutItem[];
     return parsed.map((item: GarageLayoutItem) => ({ ...item, facing: item.facing ?? 'north', name: item.name ?? (item.kind === 'zone' ? `Zone ${item.zone}` : undefined), details: item.details ?? '' }));
@@ -129,10 +130,11 @@ const loadGarageLayout = (): GarageLayoutItem[] => {
 type ParkingAppProps = {
   signedInUserId: string;
   initialCloudRevision: number | null;
+  localGuest?: boolean;
   onExit: () => void;
 };
 
-export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: ParkingAppProps) {
+export function ParkingApp({ signedInUserId, initialCloudRevision, localGuest = false, onExit }: ParkingAppProps) {
   const { data: user } = useUser();
   const { soundEnabled, toggleSound, playSound } = useNotificationSound(user?.objectId ?? user?.userPrincipalName);
   const notificationClickTimer = useRef<number | undefined>(undefined);
@@ -140,16 +142,16 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
   const [isReorderingMobileNavigation, setIsReorderingMobileNavigation] = useState(false);
   const [mobileNavigationOrder, setMobileNavigationOrder] = useState<Screen[]>(() => {
     try {
-      const saved = JSON.parse(window.localStorage.getItem('vplm-mobile-navigation-order') ?? '[]') as Screen[];
+      const saved = JSON.parse(window.localStorage.getItem(appStorageKey('vplm-mobile-navigation-order')) ?? '[]') as Screen[];
       return [...saved.filter((id: Screen) => navigation.some((item) => item.id === id)), ...navigation.map((item) => item.id).filter((id: Screen) => !saved.includes(id))];
     } catch {
       return navigation.map((item) => item.id);
     }
   });
-  const [isNeumorphism, setIsNeumorphism] = useState<boolean>(() => window.localStorage.getItem('vplm-ui-mode') === 'neumorphism');
+  const [isNeumorphism, setIsNeumorphism] = useState<boolean>(() => window.localStorage.getItem(appStorageKey('vplm-ui-mode')) === 'neumorphism');
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
-  const access = useAppAccess(user?.userPrincipalName, user?.objectId);
+  const access = useAppAccess(user?.userPrincipalName, user?.objectId, localGuest);
   const role: Role = access.data?.role ?? 'Operator';
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => loadOfflineState()?.vehicles ?? []);
   const [garageLayout, setGarageLayout] = useState<GarageLayoutItem[]>(loadGarageLayout);
@@ -164,9 +166,9 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
   const [dashboardVehicleId, setDashboardVehicleId] = useState<string>();
   const [pullDistance, setPullDistance] = useState(0);
   const pullStartY = useRef<number | undefined>(undefined);
-  const { sync, state: syncState, lastSyncAt, pendingCount: pendingChanges, hasPublishedSnapshot } = useLocalDataSync(initialCloudRevision);
+  const { sync, state: syncState, lastSyncAt, pendingCount: pendingChanges, hasPublishedSnapshot } = useLocalDataSync(initialCloudRevision, localGuest);
   const isOnline = syncState !== 'offline';
-  const syncLabel = syncState === 'syncing' ? 'Syncing…' : syncState === 'offline' ? 'Offline · pending' : syncState === 'error' ? 'Sync needs attention' : pendingChanges ? 'Changes pending' : 'Cloud synced';
+  const syncLabel = localGuest ? 'Guest · this device' : syncState === 'syncing' ? 'Syncing…' : syncState === 'offline' ? 'Offline · pending' : syncState === 'error' ? 'Sync needs attention' : pendingChanges ? 'Changes pending' : 'Cloud synced';
 
   const [zone, setZone] = useState('A');
   const [assignmentVehicle, setAssignmentVehicle] = useState<VehicleFormData>(emptyVehicleForm);
@@ -191,7 +193,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
       const currentIndex = next.indexOf(id);
       const targetIndex = next.indexOf(targetId);
       [next[currentIndex], next[targetIndex]] = [next[targetIndex], next[currentIndex]];
-      window.localStorage.setItem('vplm-mobile-navigation-order', JSON.stringify(next));
+      window.localStorage.setItem(appStorageKey('vplm-mobile-navigation-order'), JSON.stringify(next));
       return next;
     });
   };
@@ -242,7 +244,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
   };
 
   useEffect(() => {
-    window.localStorage.setItem('vplm-ui-mode', isNeumorphism ? 'neumorphism' : 'current');
+    window.localStorage.setItem(appStorageKey('vplm-ui-mode'), isNeumorphism ? 'neumorphism' : 'current');
     document.body.classList.toggle('neumorphism-mode', isNeumorphism);
     return () => document.body.classList.remove('neumorphism-mode');
   }, [isNeumorphism]);
@@ -261,7 +263,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
     saveOfflineState({ vehicles, locations, movements, reservations, auditEvents, pendingChanges, savedAt: new Date().toISOString() });
   }, [vehicles, locations, movements, reservations, auditEvents, pendingChanges, garageLayout, hasPublishedSnapshot]);
   useEffect(() => {
-    const key = 'vplm-garage-layout-v1';
+    const key = appStorageKey('vplm-garage-layout-v1');
     const serialized = JSON.stringify(garageLayout);
     if (window.localStorage.getItem(key) === serialized) return;
     window.localStorage.setItem(key, serialized);
@@ -271,7 +273,7 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
   const [zoneFilter, setZoneFilter] = useState('all');
   const [historyFilter, setHistoryFilter] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
-  const actor = user?.fullName ?? 'Local Operator';
+  const actor = localGuest ? 'Guest User' : user?.fullName ?? 'Local Operator';
 
   const activeVehicles = vehicles.filter((item: Vehicle) => item.status !== 'Delivered');
   const linkedVehicleLocationIds = useMemo(() => new Set(activeVehicles.map((item: Vehicle) => parkingRecordKey(item.currentLocationId)).filter((id: string) => Boolean(id))), [activeVehicles]);
@@ -507,9 +509,10 @@ export function ParkingApp({ signedInUserId, initialCloudRevision, onExit }: Par
               <Input value={searchQuery} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearchQuery(event.target.value)} onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && searchQuery.trim()) setScreen('search'); }} onFocus={() => { if (searchQuery.trim()) setScreen('search'); }} placeholder="Search plate or VIN" className="relative z-[1] h-11 rounded-2xl bg-transparent pl-10 pr-28" aria-label="Global vehicle search" />
             </div>
             <div className="ml-auto flex items-center gap-2">
+              {localGuest && <Badge variant="secondary" className="shrink-0 border border-amber-500/60 bg-amber-100 font-black text-amber-950">GUEST LICENSE · LOCAL ONLY</Badge>}
               {isDemoMode && <Badge variant="secondary" className="shrink-0 border border-amber-500/60 bg-amber-100 font-black text-amber-950">DEMO · ISOLATED</Badge>}
               <div className="hidden text-right xl:block"><p className="text-sm font-semibold">{format(currentTime, 'EEE, d MMM')}</p><p className="text-xs text-muted-foreground">{format(currentTime, 'HH:mm:ss')}</p></div>
-              <Button variant={isOnline && syncState !== 'error' ? 'default' : 'secondary'} size="sm" className="rounded-xl" onClick={() => void sync(true)} aria-label={`Data storage status: ${syncLabel}`} title={lastSyncAt ? `Last synced ${new Date(lastSyncAt).toLocaleString()}` : 'Click to sync workspace data'}><span className="live-dot" /><span className="hidden lg:inline">{syncLabel}</span></Button>
+              <Button variant={isOnline && syncState !== 'error' ? 'default' : 'secondary'} size="sm" className="rounded-xl" onClick={() => void sync(true)} aria-label={`Data storage status: ${syncLabel}`} title={localGuest ? 'Guest data stays on this device and is not uploaded.' : lastSyncAt ? `Last synced ${new Date(lastSyncAt).toLocaleString()}` : 'Click to sync workspace data'}><span className="live-dot" /><span className="hidden lg:inline">{syncLabel}</span></Button>
               <Button variant="outline" size="icon" className="rounded-xl" onClick={handleNotificationClick} onDoubleClick={(event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault()} aria-label={`Notifications. Sound ${soundEnabled ? 'on' : 'off'}. Double-click to toggle sound.`} title={`Notification sound ${soundEnabled ? 'on' : 'off'} · double-click to toggle`}>{soundEnabled ? <Bell /> : <BellOff />}</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1198,7 +1201,7 @@ function ManagementScreen({ role, locations, setLocations, vehicles, setVehicles
   const reorderBay = (targetId: string) => { if (!draggedBay || draggedBay === targetId) return; setLocations((current: ParkingLocation[]) => { const sourceIndex = current.findIndex((item: ParkingLocation) => item.id === draggedBay); const targetIndex = current.findIndex((item: ParkingLocation) => item.id === targetId); const next = [...current]; const [source] = next.splice(sourceIndex, 1); if (source) next.splice(targetIndex, 0, source); return next; }); logAudit('Layout', 'Parking map', `Reordered bay near ${targetId}`); setDraggedBay(undefined); };
   const reviewAi = (id: string, approved: boolean) => { const match = pendingAi.find((item: { id: string }) => item.id === id); if (!match) return; setPendingAi((current) => current.filter((item: { id: string }) => item.id !== id)); logAudit(approved ? 'Approval' : 'Rejection', 'AI match', `${match.plate} → ${match.bay}`); toast.success(`AI assignment ${approved ? 'approved' : 'rejected'}.`); };
   const saveManagementChanges = () => {
-    window.localStorage.setItem('vplm-garage-layout-v1', JSON.stringify(garageLayout));
+    window.localStorage.setItem(appStorageKey('vplm-garage-layout-v1'), JSON.stringify(garageLayout));
     logAudit('Save', 'Management center', `${locations.length} bays, ${vehicles.length} vehicles, and ${garageLayout.length} layout items`);
     toast.success('Garage layout and management changes saved on this device.');
   };
@@ -1318,7 +1321,7 @@ type DataConnectionDomain = 'parking' | 'vehicles' | 'movements' | 'reservations
 type DataConnectionDetails = { environment: string; endpoint: string; resource: string; authenticationReference: string; notes: string };
 type DataConnectionSettings = Record<DataConnectionDomain, DataConnectionDetails>;
 
-const DATA_CONNECTION_STORAGE_KEY = 'vplm-domain-connection-details-v1';
+const DATA_CONNECTION_STORAGE_KEY = appStorageKey('vplm-domain-connection-details-v1');
 const emptyConnectionDetails = (): DataConnectionDetails => ({ environment: '', endpoint: '', resource: '', authenticationReference: '', notes: '' });
 const dataConnectionDomains: { id: DataConnectionDomain; label: string; description: string }[] = [
   { id: 'parking', label: 'Parking', description: 'Parking locations, sections, rows, and bay types.' },

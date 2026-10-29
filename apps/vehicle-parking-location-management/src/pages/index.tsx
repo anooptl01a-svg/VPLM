@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { applyWorkspaceSnapshot, clearWorkspaceSnapshot } from '@/lib/workspace-storage';
 import { loadWorkspace } from '@/lib/workspace-cloud';
-import { getAppAuthRedirectUrl, isDemoMode, isSupabaseConfigured, supabase, supabaseConfigurationError } from '@/lib/supabase';
+import { getAppAuthRedirectUrl, isDemoMode, isLocalGuestMode, isSupabaseConfigured, supabase, supabaseConfigurationError } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 
 const workspaceLoadErrorMessage = (error: unknown): string => {
@@ -91,6 +91,7 @@ function AuthScreen() {
           {isDemoMode
             ? <Button className="mt-3 w-full" variant="outline" onClick={() => { window.location.assign(window.location.pathname); }}>Back to live application</Button>
             : <Button className="mt-3 w-full" variant="outline" onClick={() => { window.location.assign(`${window.location.pathname}?demo=1`); }}>Open demo workspace</Button>}
+          <Button className="mt-3 w-full" variant="outline" onClick={() => { window.location.assign(`${window.location.pathname}?guest=1`); }}>Continue as Guest · local only</Button>
           {!isResetRequest && !isSignUp && <Button className="mt-3 w-full" variant="ghost" onClick={() => { setIsResetRequest(true); setMessage(''); setErrorMessage(''); }}>
             Forgot password?
           </Button>}
@@ -112,7 +113,7 @@ function PasswordRecoveryScreen({ onContinue }: { onContinue: () => void }) {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!client) return;
+    if (isLocalGuestMode || !client) return;
     setBusy(true);
     setErrorMessage('');
     try {
@@ -161,7 +162,7 @@ export default function HomePage() {
   const [workspaceError, setWorkspaceError] = useState('');
 
   useEffect(() => {
-    if (!client) return;
+    if (isLocalGuestMode || !client) return;
     let active = true;
     const initializeSession = async () => {
       const { data, error } = await client.auth.getSession();
@@ -185,6 +186,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    if (isLocalGuestMode) return;
     if (!session) {
       setWorkspaceLoaded(false);
       setWorkspaceRevision(null);
@@ -212,6 +214,10 @@ export default function HomePage() {
     return () => { active = false; };
   }, [session?.user.id]);
 
+  if (isLocalGuestMode) {
+    return <ParkingApp signedInUserId="Guest User" initialCloudRevision={null} localGuest onExit={() => { window.location.assign(window.location.pathname); }} />;
+  }
+
   if (!isSupabaseConfigured || !client) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -227,6 +233,7 @@ export default function HomePage() {
             <Button className="w-full" variant="outline" onClick={() => { window.location.assign(isDemoMode ? window.location.pathname : `${window.location.pathname}?demo=1`); }}>
               {isDemoMode ? 'Back to live application' : 'Open demo workspace'}
             </Button>
+            <Button className="w-full" variant="outline" onClick={() => { window.location.assign(`${window.location.pathname}?guest=1`); }}>Continue as Guest · local only</Button>
           </CardContent>
         </Card>
       </main>

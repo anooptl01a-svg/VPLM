@@ -1,5 +1,6 @@
 import type { ParkingLocation, Vehicle } from '@/lib/parking-data';
 import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
+import { appStorageKey } from '@/lib/local-storage-scope';
 
 export type RoadTestStatus = 'Assigned' | 'In Road Test' | 'Completed' | 'Cancelled';
 export type RoadTestResult = 'Pass' | 'Fail';
@@ -63,9 +64,9 @@ export interface RoadTestNotification {
   read: boolean;
 }
 
-const STORAGE_KEY = 'vplm-road-tests-v2';
-const AUDIT_KEY = 'vplm-road-test-audit-v2';
-const NOTIFICATION_KEY = 'vplm-road-test-notifications-v2';
+const STORAGE_KEY = appStorageKey('vplm-road-tests-v2');
+const AUDIT_KEY = appStorageKey('vplm-road-test-audit-v2');
+const NOTIFICATION_KEY = appStorageKey('vplm-road-test-notifications-v2');
 
 const fallbackTests: RoadTestRecord[] = [];
 

@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import type { ParkingLocation, Vehicle } from '@/lib/parking-data';
 import { loadRoadTestAudit, loadRoadTestNotifications, loadRoadTests, roadTestLocationLabel, saveRoadTestData, type RoadTestAuditEntry, type RoadTestNotification, type RoadTestPriority, type RoadTestRecord, type RoadTestResult, type RoadTestType } from '@/lib/road-test-data';
 import { useUser } from '@/hooks/use-user';
+import { appStorageKey } from '@/lib/local-storage-scope';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -63,7 +64,7 @@ export function RoadTestManagement({ vehicles, locations, actor, canCreateAssign
   const { data: user } = useUser();
   const applicationUsers = useMemo(() => {
     try {
-      return JSON.parse(window.localStorage.getItem(`vplm-management-users:${actor}`) ?? '[]') as { id: string; name: string; email: string; role: string }[];
+      return JSON.parse(window.localStorage.getItem(appStorageKey(`vplm-management-users:${actor}`)) ?? '[]') as { id: string; name: string; email: string; role: string }[];
     } catch {
       return [];
     }

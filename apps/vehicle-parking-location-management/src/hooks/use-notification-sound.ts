@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { appStorageKey } from '@/lib/local-storage-scope';
 
 type NotificationSound = 'assignment' | 'success' | 'urgent' | 'general';
 
 const preferenceEvent = 'vplm-notification-sound-preference';
 
-const preferenceKey = (userId: string | undefined): string => `vplm-notification-sound:${userId || 'anonymous'}`;
+const preferenceKey = (userId: string | undefined): string => appStorageKey(`vplm-notification-sound:${userId || 'anonymous'}`);
 
 const readPreference = (userId: string | undefined): boolean => window.localStorage.getItem(preferenceKey(userId)) !== 'off';
 

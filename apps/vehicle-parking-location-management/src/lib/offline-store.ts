@@ -1,7 +1,8 @@
 import type { Movement, ParkingLocation, Reservation, Vehicle } from '@/lib/parking-data';
 import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
+import { appStorageKey } from '@/lib/local-storage-scope';
 
-const STORAGE_KEY = 'vehicle-parking-browser-state-v2';
+const STORAGE_KEY = appStorageKey('vehicle-parking-browser-state-v2');
 const MAX_LOCAL_HISTORY_ITEMS = 500;
 const PHOTO_RETENTION_MS = 10 * 24 * 60 * 60 * 1000;
 

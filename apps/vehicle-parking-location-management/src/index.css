@@ -847,7 +847,7 @@ body.neumorphism-mode [data-slot='dropdown-menu-item'][data-highlighted] svg:not
   .live-parking-garage .parking-space:hover,
   .live-parking-garage .parking-space-selected { background: color-mix(in oklch, var(--card) 18%, transparent); }
   .live-parking-garage .top-view-car { z-index: 25; }
-  .live-parking-garage .vehicle-alerts,
+  .live-parking-garage .vehicle-alerts { z-index: 31; }
   .live-parking-garage .vehicle-registration { z-index: 30; }
   .bay-map-space, .accommodation-parking-space { min-height: 7.1rem; margin-inline: 0.04rem; border: 2px solid var(--card); border-radius: 0.5rem 0.5rem 0.2rem 0.2rem; box-shadow: 0 9px 16px -14px var(--foreground); }
   .bay-map-space:hover { z-index: 12; transform: translateY(-4px); filter: brightness(1.03); }

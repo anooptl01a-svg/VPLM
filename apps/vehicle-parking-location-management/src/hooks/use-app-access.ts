@@ -18,11 +18,19 @@ const roleCan = (role: AppRole, feature: AccessFeature, action: AccessAction) =>
   return (feature === 'Vehicles' && ['View', 'Create', 'Edit', 'Assign'].includes(action)) || (feature === 'VehicleMovements' && ['View', 'Transfer', 'Release'].includes(action)) || feature === 'ParkingLayout';
 };
 
-export const useAppAccess = (userPrincipalName: string | undefined, userObjectId?: string) => {
+export const useAppAccess = (userPrincipalName: string | undefined, userObjectId?: string, localGuest = false) => {
   return useQuery<AppAccess>({
-    queryKey: ['app-access', userPrincipalName, userObjectId],
-    enabled: Boolean(userPrincipalName || userObjectId),
+    queryKey: ['app-access', userPrincipalName, userObjectId, localGuest],
+    enabled: Boolean(userPrincipalName || userObjectId || localGuest),
     queryFn: async () => {
+      if (localGuest) {
+        const role: AppRole = 'Guest Users';
+        return {
+          appUser: { id: 'local-guest', applicationUserName: 'Guest User', email: '' },
+          role,
+          can: (feature: AccessFeature, action: AccessAction) => roleCan(role, feature, action),
+        };
+      }
       if (!supabase || !userObjectId) throw new Error('Authenticated workspace membership is required.');
       const { data, error } = await supabase
         .from('workspace_members')

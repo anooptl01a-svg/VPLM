@@ -5,8 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { readWorkspaceSnapshot } from '@/lib/workspace-storage';
 import { WORKSPACE_DATA_CHANGED } from '@/lib/workspace-sync-events';
 
-export function useLocalDataSync(initialRevision: number | null) {
-  const [state, setState] = useState<'idle' | 'offline' | 'syncing' | 'error'>(() => navigator.onLine ? 'idle' : 'offline');
+export function useLocalDataSync(initialRevision: number | null, localOnly = false) {
+  const [state, setState] = useState<'idle' | 'offline' | 'syncing' | 'error'>(() => localOnly || navigator.onLine ? 'idle' : 'offline');
   const [lastSyncAt, setLastSyncAt] = useState<string>();
   const [pendingCount, setPendingCount] = useState(0);
   const revision = useRef(initialRevision);
@@ -16,6 +16,7 @@ export function useLocalDataSync(initialRevision: number | null) {
   const syncBlocked = useRef(false);
 
   useEffect(() => {
+    if (localOnly) return;
     const setOnline = () => {
       setState('idle');
       window.dispatchEvent(new Event(WORKSPACE_DATA_CHANGED));
@@ -28,9 +29,13 @@ export function useLocalDataSync(initialRevision: number | null) {
       window.removeEventListener('online', setOnline);
       window.removeEventListener('offline', setOffline);
     };
-  }, []);
+  }, [localOnly]);
 
   const sync = useCallback(async (announce = true) => {
+    if (localOnly) {
+      if (announce) toast.info('Guest data stays on this device and is not uploaded.');
+      return false;
+    }
     if (!supabase) {
       const error = new Error('Supabase is not configured.');
       setState('error');
@@ -75,10 +80,11 @@ export function useLocalDataSync(initialRevision: number | null) {
         void sync(false);
       }
     }
-  }, []);
+  }, [localOnly]);
 
   useEffect(() => {
     const scheduleSync = () => {
+      if (localOnly) return;
       if (syncBlocked.current) return;
       if (timer.current !== undefined) window.clearTimeout(timer.current);
       setPendingCount(1);
@@ -89,7 +95,7 @@ export function useLocalDataSync(initialRevision: number | null) {
       window.removeEventListener(WORKSPACE_DATA_CHANGED, scheduleSync);
       if (timer.current !== undefined) window.clearTimeout(timer.current);
     };
-  }, [sync]);
+  }, [localOnly, sync]);
 
   return { sync, state, lastSyncAt, pendingCount, hasPublishedSnapshot: true };
 }

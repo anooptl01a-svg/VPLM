@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 export const isDemoMode = new URLSearchParams(window.location.search).get('demo') === '1';
+export const isLocalGuestMode = new URLSearchParams(window.location.search).get('guest') === '1';
 
 export const getAppAuthRedirectUrl = (): string => {
   const url = new URL(window.location.href);
@@ -40,6 +41,7 @@ export const supabaseConfigurationError = 'error' in configuration ? configurati
 export const isSupabaseConfigured = !supabaseConfigurationError;
 
 export const supabase = 'error' in configuration
+  || isLocalGuestMode
   ? null
   : createClient(configuration.url, configuration.key, {
       auth: {

@@ -38,7 +38,7 @@ export type BayManagementState = {
   audit: BayAuditEntry[];
 };
 
-const STORAGE_KEY = 'vplm-bay-management-v1';
+const STORAGE_KEY = appStorageKey('vplm-bay-management-v1');
 
 export const emptyBayManagementState: BayManagementState = { reservations: [], maintenance: [], audit: [] };
 
@@ -58,3 +58,4 @@ export const saveBayManagementState = (state: BayManagementState): void => {
   if (changed) notifyWorkspaceDataChanged();
 };
 import { notifyWorkspaceDataChanged } from '@/lib/workspace-sync-events';
+import { appStorageKey } from '@/lib/local-storage-scope';
